@@ -1,5 +1,5 @@
 import { MealRepository } from "src/Planner/Domain/interfaces/MealRepository";
-import { IngredientsRepository } from "src/Planner/Domain/interfaces/IngredientsRepository";
+import { IngredientRepository } from "src/Planner/Domain/interfaces/IngredientRepository";
 
 interface GetMealsRequest {
   userId: string;
@@ -26,7 +26,7 @@ interface MealResponse {
 export class GetMealsUseCase {
   constructor(
     private mealRepository: MealRepository,
-    private ingredientRepository: IngredientsRepository,
+    private ingredientRepository: IngredientRepository,
   ) {}
 
   async execute(request: GetMealsRequest): Promise<MealResponse[]> {

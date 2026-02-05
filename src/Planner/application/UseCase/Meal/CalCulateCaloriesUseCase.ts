@@ -1,4 +1,4 @@
-import { MealRepository } from "../Domain/interfaces/MealRepository";
+import { MealRepository } from "../../../Domain/interfaces/MealRepository";
 
 interface CalculateCaloriesRequest {
   userId: string;

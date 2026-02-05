@@ -1,6 +1,6 @@
-import { MealRepository } from "../Domain/interfaces/MealRepository";
-import { Meal } from "../Domain/Entities/Meal";
-import { IngredientsRepository } from "../Domain/interfaces/IngredientsRepository";
+import { MealRepository } from "../../../Domain/interfaces/MealRepository";
+import { Meal } from "../../../Domain/Entities/Meal";
+import { IngredientRepository } from "../../../Domain/interfaces/IngredientRepository";
 import { AppError } from "@shared/Errors/AppErrors";
 
 interface UpdateMealRequest {
@@ -35,7 +35,7 @@ interface UpdateMealResponse {
 export class UpdateMealUseCase {
   constructor(
     private mealRepository: MealRepository,
-    private ingredientRepository: IngredientsRepository,
+    private ingredientRepository: IngredientRepository,
   ) {}
 
   async execute(request: UpdateMealRequest): Promise<UpdateMealResponse> {

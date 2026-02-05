@@ -1,5 +1,5 @@
-import { MealRepository } from "../Domain/interfaces/MealRepository";
-import { IngredientsRepository } from "../Domain/interfaces/IngredientsRepository";
+import { MealRepository } from "../../../Domain/interfaces/MealRepository";
+import { IngredientRepository } from "../../../Domain/interfaces/IngredientRepository";
 import { AppError } from "@shared/Errors/AppErrors";
 
 interface GetMealsByDateRangeRequest {
@@ -26,7 +26,7 @@ interface DailySummary {
 export class GetMealsByDateRangeUseCase {
   constructor(
     private mealRepository: MealRepository,
-    private ingredientRepository: IngredientsRepository,
+    private ingredientRepository: IngredientRepository,
   ) {}
 
   async execute(request: GetMealsByDateRangeRequest): Promise<DailySummary[]> {

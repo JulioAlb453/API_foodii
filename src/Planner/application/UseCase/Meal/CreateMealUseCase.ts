@@ -1,6 +1,6 @@
 import { Meal } from "src/Planner/Domain/Entities/Meal";
 import { MealRepository } from "src/Planner/Domain/interfaces/MealRepository";
-import { IngredientsRepository } from "src/Planner/Domain/interfaces/IngredientsRepository";
+import { IngredientRepository } from "src/Planner/Domain/interfaces/IngredientRepository";
 import { AppError } from "@shared/Errors/AppErrors";
 
 interface CreateMealRequest {
@@ -34,7 +34,7 @@ interface CreateMealResponse {
 export class CreateMealUseCase {
   constructor(
     private mealRepository: MealRepository,
-    private ingredientRepository: IngredientsRepository,
+    private ingredientRepository: IngredientRepository,
   ) {}
 
   async execute(request: CreateMealRequest): Promise<CreateMealResponse> {
