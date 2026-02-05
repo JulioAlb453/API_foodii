@@ -1,13 +1,13 @@
 import { Ingredients } from "../Entities/Ingredients";
 
-export interface IngredientsReposotory {
+export interface IngredientsRepository {
   create(ingredients: Ingredients): Promise<Ingredients>;
   findById(id: string): Promise<Ingredients | null>;
   findByUser(userId: string): Promise<Ingredients[]>;
   delete(id: string, userId: string): Promise<boolean>;
 }
 
-export class IngredientsRepositories implements IngredientsReposotory {
+export class IngredientsRepositories implements IngredientsRepository {
   private ingredients: Map<string, Ingredients> = new Map();
 
   async create(ingredients: Ingredients): Promise<Ingredients> {

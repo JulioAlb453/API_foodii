@@ -13,25 +13,17 @@ export class Meal implements IMeal {
     public readonly totalCalories: number,
   ) {}
 
-  static create(
-    id: string,
-    name: string,
-    date: Date,
-    mealTime: string,
-    ingredients: IMealIngredient[],
-    CreatedBy: string,
-    createdAt: Date,
-    totalCalories: number,
-  ): Meal {
+  
+  static create(data: IMeal): Meal {
     return new Meal(
-      id,
-      name,
-      date,
-      mealTime,
-      ingredients,
-      CreatedBy,
-      createdAt,
-      totalCalories,
+      data.id,
+      data.name,
+      data.date,
+      data.mealTime,
+      data.ingredients,
+      data.CreatedBy,
+      data.createdAt,
+      data.totalCalories
     );
   }
 }
