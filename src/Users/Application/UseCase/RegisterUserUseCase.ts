@@ -1,7 +1,7 @@
 import { User } from "src/Users/Domain/Entities/User";
 import { UserRepository } from "src/Users/Domain/Interfaces/UserRepository";
 import { AppError } from "@shared/Errors/AppErrors";
-import { HashService } from "src/Core/UseCase/HashService.interface";
+import { HashService } from "src/Core/Application/Ports/HashService.interface";
 
 interface ChangePasswordRequest {
   userId: string;

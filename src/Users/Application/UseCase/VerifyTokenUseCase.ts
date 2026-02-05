@@ -1,4 +1,4 @@
-import { TokenService } from "src/Core/UseCase/TokenService.interface";
+import { TokenService } from "src/Core/Application/Ports/TokenService.interface";
 import { UserRepository } from "src/Users/Domain/Interfaces/UserRepository";
 
 interface VerifyTokenRequest {
