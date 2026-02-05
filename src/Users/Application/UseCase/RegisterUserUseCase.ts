@@ -1,79 +1,91 @@
+import { randomUUID } from "crypto";
 import { User } from "src/Users/Domain/Entities/User";
 import { UserRepository } from "src/Users/Domain/Interfaces/UserRepository";
 import { AppError } from "@shared/Errors/AppErrors";
 import { HashService } from "src/Core/Application/Ports/HashService.interface";
+import { TokenService } from "src/Core/Application/Ports/TokenService.interface";
 
-interface ChangePasswordRequest {
-  userId: string;
-  currentPassword: string;
-  newPassword: string;
+export interface RegisterUserRequest {
+  username: string;
+  password: string;
 }
 
-interface ChangePasswordResponse {
-  success: boolean;
-  message: string;
+export interface RegisterUserResponse {
+  user: {
+    id: string;
+    username: string;
+    createdAt: Date;
+  };
+  token: string;
+  tokenExpiresIn: string;
 }
 
-export class ChangePasswordUseCase {
+export class RegisterUserUseCase {
   constructor(
     private userRepository: UserRepository,
     private hashService: HashService,
+    private tokenService: TokenService
   ) {}
 
-  async execute(
-    request: ChangePasswordRequest,
-  ): Promise<ChangePasswordResponse> {
-    const { userId, currentPassword, newPassword } = request;
+  async execute(request: RegisterUserRequest): Promise<RegisterUserResponse> {
+    const { username, password } = request;
 
-    if (newPassword.length < 6) {
-      throw new AppError(
-        "La nueva contraseña debe tener al menos 6 caracteres",
-        400,
-      );
-    }
+    this.validateInput(username, password);
 
-    const user = await this.userRepository.findById(userId);
+    const cleanUsername = username.toLowerCase().trim();
 
-    if (!user) {
-      throw new AppError("Usuario no encontrado", 404);
-    }
+    await this.ensureUsernameNotTaken(cleanUsername);
 
-    const isValidPassword = await this.hashService.compare(
-      currentPassword,
-      user.password,
-    );
+    const hashedPassword = await this.hashService.hash(password);
+    const now = new Date();
 
-    if (!isValidPassword) {
-      throw new AppError("Contraseña actual incorrecta", 401);
-    }
-
-    const isSamePassword = await this.hashService.compare(
-      newPassword,
-      user.password,
-    );
-
-    if (isSamePassword) {
-      throw new AppError(
-        "La nueva contraseña debe ser diferente a la actual",
-        400,
-      );
-    }
-
-    const hashedNewPassword = await this.hashService.hash(newPassword);
-
-    const updatedUser = User.create({
-      id: user.id,
-      username: user.username,
-      password: hashedNewPassword,
-      createdAt: user.createdAt,
-      updatedAt: new Date(),
+    const user = User.create({
+      id: randomUUID(),
+      username: cleanUsername,
+      password: hashedPassword,
+      createdAt: now,
+      updatedAt: now,
     });
 
-    await this.userRepository.create(updatedUser);
+    const savedUser = await this.userRepository.create(user);
+    const token = this.tokenService.generate({
+      id: savedUser.id,
+      username: savedUser.username,
+    });
 
     return {
-      success: true,
-      message: "Contraseña cambiada exitosamente",
+      user: {
+        id: savedUser.id,
+        username: savedUser.username,
+        createdAt: savedUser.createdAt,
+      },
+      token,
+      tokenExpiresIn: "7d",
     };
+  }
+
+  private validateInput(username: string, password: string): void {
+    if (!username || username.trim().length === 0) {
+      throw new AppError("El username es requerido", 400);
+    }
+
+    if (username.trim().length < 3) {
+      throw new AppError("El username debe tener al menos 3 caracteres", 400);
+    }
+
+    if (!password || password.length === 0) {
+      throw new AppError("La contraseña es requerida", 400);
+    }
+
+    if (password.length < 6) {
+      throw new AppError("La contraseña debe tener al menos 6 caracteres", 400);
+    }
+  }
+
+  private async ensureUsernameNotTaken(username: string): Promise<void> {
+    const existing = await this.userRepository.findByUsername(username);
+    if (existing) {
+      throw new AppError("El username ya está en uso", 409);
+    }
   }
 }
