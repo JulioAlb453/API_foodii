@@ -31,16 +31,12 @@ export class GetMealByIdUseCase {
   ) {}
 
   async execute(request: GetMealByIdRequest): Promise<GetMealByIdResponse> {
-    const { id, userId } = request;
+    const { id } = request;
 
     const meal = await this.mealRepository.findById(id);
 
     if (!meal) {
       throw new AppError("Comida no encontrada", 404);
-    }
-
-    if (meal.CreatedBy !== userId) {
-      throw new AppError("No tienes permiso para ver esta comida", 403);
     }
 
     const ingredientsDetails: MealIngredientResponse[] = [];

@@ -21,11 +21,11 @@ export class CalculateCaloriesUseCase {
   constructor(private mealRepository: MealRepository) {}
 
   async execute(request: CalculateCaloriesRequest): Promise<CaloriesSummary> {
-    const { userId, date } = request;
+    const { date } = request;
 
     const meals = date
-      ? await this.mealRepository.findByUserAndDate(userId, new Date(date))
-      : await this.mealRepository.findByUser(userId);
+      ? await this.mealRepository.findByDate(new Date(date))
+      : await this.mealRepository.findAll();
 
     if (meals.length === 0) {
       return {

@@ -30,7 +30,7 @@ export class GetMealsByDateRangeUseCase {
   ) {}
 
   async execute(request: GetMealsByDateRangeRequest): Promise<DailySummary[]> {
-    const { userId, startDate, endDate } = request;
+    const { startDate, endDate } = request;
 
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -42,14 +42,7 @@ export class GetMealsByDateRangeUseCase {
       );
     }
 
-    const allMeals = await this.mealRepository.findByUser(userId);
-
-    const filteredMeals = allMeals.filter((meal) => {
-      const mealDate = new Date(meal.date);
-      mealDate.setHours(0, 0, 0, 0);
-
-      return mealDate >= start && mealDate <= end;
-    });
+    const filteredMeals = await this.mealRepository.findByDateRange(start, end);
 
     const groupedByDate: Record<string, MealResponse[]> = {};
 

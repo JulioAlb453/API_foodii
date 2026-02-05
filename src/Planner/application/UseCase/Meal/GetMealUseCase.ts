@@ -30,12 +30,12 @@ export class GetMealsUseCase {
   ) {}
 
   async execute(request: GetMealsRequest): Promise<MealResponse[]> {
-    const { userId, date } = request;
+    const { date } = request;
 
-    // Obtener comidas
+    // Obtener todas las comidas (catálogo compartido) o filtradas por fecha
     const meals = date
-      ? await this.mealRepository.findByUserAndDate(userId, new Date(date))
-      : await this.mealRepository.findByUser(userId);
+      ? await this.mealRepository.findByDate(new Date(date))
+      : await this.mealRepository.findAll();
 
     // Enriquecer comidas con detalles de ingredientes
     const enrichedMeals: MealResponse[] = [];

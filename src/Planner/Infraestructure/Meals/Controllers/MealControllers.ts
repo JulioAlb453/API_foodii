@@ -55,7 +55,14 @@ export class MealController {
 
   async getAll(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.user?.id;
+      if (!userId) {
+        res.status(401).json({
+          success: false,
+          error: "Usuario no autenticado",
+        });
+        return;
+      }
       const { date } = req.query;
 
       const result = await this.getMealsUseCase.execute({

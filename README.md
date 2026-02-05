@@ -80,15 +80,15 @@ src/
 2. **Middleware (rutas protegidas):** Si la ruta lleva `authMiddleware`, se valida el header `Authorization: Bearer <token>`, se verifica el JWT con `TokenService` y se asigna `req.user = { id, username }`. Si falla, se responde 401.
 3. **Controlador:** Recibe `req`/`res`, extrae body/params/query y llama al **caso de uso** correspondiente con un DTO. Devuelve JSON con el resultado o con el error (usando `error.statusCode` cuando existe).
 4. **Caso de uso:** Valida la entrada, usa **repositorios** (y en Auth también **HashService** y **TokenService**) y devuelve un resultado tipado. Los errores de negocio se lanzan con `AppError(message, statusCode)`.
-5. **Repositorios:** Por ahora son implementaciones en memoria (`Map`). Las interfaces están en el dominio; los controladores y casos de uso dependen de esas interfaces, no de la implementación.
+5. **Repositorios:** Las interfaces están en el dominio; la aplicación usa implementaciones MySQL (`UserRepositoryMySQL`, `IngredientRepositoryMySQL`, `MealRepositoryMySQL`) que se inyectan desde `index.ts`. Los casos de uso dependen de las interfaces, no de la implementación.
 
 ### Inyección de dependencias
 
-- **`auth.dependencies.ts`:** Crea `UserRepositories`, `BcryptAdapter`, `JwtAdapter`, los 6 use cases de Users y el `AuthController`. Exporta `authController` y `tokenService`.
-- **`ingredient.dependencies.ts`:** Crea `IngredientRepositories` y todos los use cases de Ingredients y el `IngredientController`. Exporta `ingredientController` y `ingredientRepository`.
-- **`meal.dependencies.ts`:** Recibe opcionalmente `mealRepository` e `ingredientRepository`. Crea los use cases de Meal y el `MealController`. Para que las comidas usen los mismos datos que los ingredientes, se pasa el mismo `ingredientRepository` que el de Ingredients.
+- **`auth.dependencies.ts`:** Recibe opcionalmente `userRepository`, `hashService`, `tokenService`. Crea los 6 use cases de Users y el `AuthController`. Exporta `authController` y `tokenService`.
+- **`ingredient.dependencies.ts`:** Recibe opcionalmente `ingredientRepository`. Crea los use cases de Ingredients y el `IngredientController`.
+- **`meal.dependencies.ts`:** Recibe opcionalmente `mealRepository` e `ingredientRepository`. Crea los use cases de Meal y el `MealController`.
 
-En **`index.ts`** se llama a estas funciones, se obtienen los controladores y el `tokenService`, se crea el middleware con `createAuthMiddleware(tokenService)` y se registran todas las rutas con `registerRoutes(app, { ... })`.
+En **`index.ts`** se crea el pool MySQL, se instancian los repositorios MySQL y se pasan a las funciones de dependencias; luego se crea el middleware de auth y se registran las rutas.
 
 ---
 
@@ -107,16 +107,27 @@ cd API_foodii
 npm install
 ```
 
-### Variables de entorno (opcional)
+### Variables de entorno
 
-Crea un archivo `.env` en la raíz:
+Copia `.env.example` a `.env` y ajusta los valores:
 
-```env
-PORT=3000
-JWT_SECRET=tu_clave_secreta
+```bash
+cp .env.example .env
 ```
 
-Si no existe, el servidor usa el puerto **3000** y un `JWT_SECRET` por defecto.
+Variables usadas por la API:
+
+| Variable | Descripción | Por defecto |
+|----------|-------------|-------------|
+| `PORT` | Puerto del servidor | 3000 |
+| `JWT_SECRET` | Clave para firmar tokens | (valor por defecto en código) |
+| `DB_HOST` | Host de MySQL | localhost |
+| `DB_PORT` | Puerto de MySQL | 3306 |
+| `DB_USER` | Usuario de MySQL | root |
+| `DB_PASSWORD` | Contraseña de MySQL | (vacío) |
+| `DB_NAME` | Nombre de la base de datos | foodii_db |
+
+**Importante:** La API usa MySQL. Crea antes la base de datos y las tablas con `database/schema.sql` (ver sección [Base de datos (MySQL)](#base-de-datos-mysql)).
 
 ### Scripts
 
@@ -131,6 +142,25 @@ npm run dev
 ```
 
 El servidor quedará en `http://localhost:3000` (o en el `PORT` definido en `.env`).
+
+---
+
+## Base de datos (MySQL)
+
+La API persiste los datos en MySQL. En la carpeta `database/` están los scripts:
+
+| Archivo | Descripción |
+|---------|-------------|
+| `database/schema.sql` | Crea la base `foodii_db` y las tablas: `users`, `ingredients`, `meals`, `meal_ingredients`. |
+| `database/drop.sql` | Elimina la base `foodii_db`. |
+
+**Crear la base de datos antes de arrancar la API:**
+
+```bash
+mysql -u root -p < database/schema.sql
+```
+
+Desde el cliente MySQL: `source /ruta/al/proyecto/database/schema.sql`
 
 ---
 
