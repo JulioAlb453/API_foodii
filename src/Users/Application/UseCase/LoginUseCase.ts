@@ -1,4 +1,4 @@
-import { AppError } from '@shared/Errors/AppErrors';
+import { AppError } from "src/shared/Errors/AppErrors";
 import { TokenService } from 'src/Core/Application/Ports/TokenService.interface';
 import { HashService } from 'src/Core/Application/Ports/HashService.interface';
 import { UserRepository } from 'src/Users/Domain/Interfaces/UserRepository';

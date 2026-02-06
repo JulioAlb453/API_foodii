@@ -1,4 +1,4 @@
-import { AppError } from '@shared/Errors/AppErrors';
+import { AppError } from "src/shared/Errors/AppErrors";
 import { UserRepository } from 'src/Users/Domain/Interfaces/UserRepository';
 
 interface GetUserProfileRequest {

@@ -1,4 +1,4 @@
-import { AppError } from '@shared/Errors/AppErrors';
+import { AppError } from "src/shared/Errors/AppErrors";
 import { IngredientRepository } from 'src/Planner/Domain/interfaces/IngredientRepository';
 
 interface GetIngredientByIdRequest {
