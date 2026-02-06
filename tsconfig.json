@@ -15,9 +15,7 @@
     "resolveJsonModule": true,
     "baseUrl": ".",
     "paths": {
-      "@core/*": ["src/core/*"],
-      "@shared/*": ["src/shared/*"],
-      "@infrastructure/*": ["src/infrastructure/*"]
+      "src/*": ["src/*"],
     }
   },
   "include": ["src/**/*"],
