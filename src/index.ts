@@ -18,18 +18,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Pool MySQL (usa variables DB_* de .env)
 const pool = getPool();
 const userRepository = new UserRepositoryMySQL(pool);
 const ingredientRepository = new IngredientRepositoryMySQL(pool);
 const mealRepository = new MealRepositoryMySQL(pool);
 
-// Dependencias Auth (con repositorio MySQL)
 const { authController, tokenService } = createAuthDependencies({
   userRepository,
 });
 
-// Dependencias Ingredients y Meals (repositorios MySQL)
 const { ingredientController } = createIngredientDependencies({
   ingredientRepository,
 });
@@ -38,10 +35,8 @@ const { mealController } = createMealDependencies({
   ingredientRepository,
 });
 
-// Middleware de autenticación
 const authMiddleware = createAuthMiddleware(tokenService);
 
-// Registrar todas las rutas
 registerRoutes(app, {
   authController,
   mealController,
@@ -49,7 +44,8 @@ registerRoutes(app, {
   authMiddleware,
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`);
-  console.log(`Auth health: http://localhost:${PORT}/api/auth/health`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servidor corriendo`);
+  console.log(`Puerto: ${PORT}`);
+  console.log(`IP Pública: http://52.206.95.157:${PORT}`);
 });
