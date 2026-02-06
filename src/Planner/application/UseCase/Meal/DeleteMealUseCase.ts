@@ -1,5 +1,5 @@
 import { MealRepository } from "src/Planner/Domain/interfaces/MealRepository";
-import { AppError } from "@shared/Errors/AppErrors";
+import { AppError } from "src/shared/Errors/AppErrors";
 
 interface DeleteMealRequest {
   id: string;

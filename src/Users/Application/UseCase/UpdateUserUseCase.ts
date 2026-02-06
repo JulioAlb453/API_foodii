@@ -1,6 +1,6 @@
 import { User } from "src/Users/Domain/Entities/User";
 import { UserRepository } from "src/Users/Domain/Interfaces/UserRepository";
-import { AppError } from "@shared/Errors/AppErrors";
+import { AppError } from "src/shared/Errors/AppErrors";
 
 interface UpdateProfileRequest {
   userId: string;

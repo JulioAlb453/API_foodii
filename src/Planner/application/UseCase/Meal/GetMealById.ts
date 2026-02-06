@@ -1,6 +1,6 @@
 import { MealRepository } from "src/Planner/Domain/interfaces/MealRepository";
 import { IngredientRepository } from "src/Planner/Domain/interfaces/IngredientRepository";
-import { AppError } from "@shared/Errors/AppErrors";
+import { AppError } from "src/shared/Errors/AppErrors";
 
 interface GetMealByIdRequest {
   id: string;

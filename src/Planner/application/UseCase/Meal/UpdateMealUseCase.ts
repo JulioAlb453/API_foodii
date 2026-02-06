@@ -1,7 +1,7 @@
 import { MealRepository } from "../../../Domain/interfaces/MealRepository";
 import { Meal } from "../../../Domain/Entities/Meal";
 import { IngredientRepository } from "../../../Domain/interfaces/IngredientRepository";
-import { AppError } from "@shared/Errors/AppErrors";
+import { AppError } from "src/shared/Errors/AppErrors";
 
 interface UpdateMealRequest {
   id: string;
