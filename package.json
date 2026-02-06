@@ -40,6 +40,9 @@
     "typescript": "^5.9.3"
   },
   "_moduleAliases": {
-    "src": "dist"
+    "src": "dist",
+    "@shared": "dist/Shared",
+    "@core": "dist/Core",
+    "@infrastructure": "dist/Infrastructure"
   }
 }
