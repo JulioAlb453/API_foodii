@@ -21,10 +21,9 @@ export class MealController {
 
   async create(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user.id;
-      const { name, date, mealTime, ingredients } = req.body;
+      const { userId,name, date, mealTime, ingredients } = req.body;
 
-      if (!name || !date || !mealTime || !ingredients) {
+      if (! userId || !name || !date || !mealTime || !ingredients) {
         res.status(400).json({
           success: false,
           error: "name, date, mealTime y ingredients son requeridos",
