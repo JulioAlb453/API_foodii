@@ -47,53 +47,52 @@ export function registerRoutes(app: Express, deps: RouteDependencies): void {
   );
 
   // ----- Meals (todas protegidas) -----
-  app.post("/api/meals", authMiddleware, (req, res) =>
+  app.post("/api/meals", (req, res) =>
     mealController.create(req, res)
   );
-  app.get("/api/meals", authMiddleware, (req, res) =>
+  app.get("/api/meals", (req, res) =>
     mealController.getAll(req, res)
   );
-  app.get("/api/meals/calories-summary", authMiddleware, (req, res) =>
+  app.get("/api/meals/calories-summary", (req, res) =>
     mealController.getCaloriesSummary(req, res)
   );
-  app.get("/api/meals/date-range", authMiddleware, (req, res) =>
+  app.get("/api/meals/date-range", (req, res) =>
     mealController.getByDateRange(req, res)
   );
-  app.get("/api/meals/:id", authMiddleware, (req, res) =>
+  app.get("/api/meals/:id", (req, res) =>
     mealController.getById(req, res)
   );
-  app.put("/api/meals/:id", authMiddleware, (req, res) =>
+  app.put("/api/meals/:id", (req, res) =>
     mealController.update(req, res)
   );
-  app.delete("/api/meals/:id", authMiddleware, (req, res) =>
+  app.delete("/api/meals/:id", (req, res) =>
     mealController.delete(req, res)
   );
 
   // ----- Ingredients (todas protegidas) -----
-  app.post("/api/ingredients", authMiddleware, (req, res) =>
+  app.post("/api/ingredients", (req, res) =>
     ingredientController.create(req, res)
   );
-  app.get("/api/ingredients", authMiddleware, (req, res) =>
+  app.get("/api/ingredients", (req, res) =>
     ingredientController.getAll(req, res)
   );
-  app.get("/api/ingredients/search", authMiddleware, (req, res) =>
+  app.get("/api/ingredients/search", (req, res) =>
     ingredientController.search(req, res)
   );
-  app.post("/api/ingredients/calculate-calories", authMiddleware, (req, res) =>
+  app.post("/api/ingredients/calculate-calories", (req, res) =>
     ingredientController.calculateCalories(req, res)
   );
   app.post(
     "/api/ingredients/calculate-bulk-calories",
-    authMiddleware,
     (req, res) => ingredientController.calculateBulkCalories(req, res)
   );
-  app.get("/api/ingredients/:id", authMiddleware, (req, res) =>
+  app.get("/api/ingredients/:id", (req, res) =>
     ingredientController.getById(req, res)
   );
-  app.put("/api/ingredients/:id", authMiddleware, (req, res) =>
+  app.put("/api/ingredients/:id", (req, res) =>
     ingredientController.update(req, res)
   );
-  app.delete("/api/ingredients/:id", authMiddleware, (req, res) =>
+  app.delete("/api/ingredients/:id", (req, res) =>
     ingredientController.delete(req, res)
   );
 }
