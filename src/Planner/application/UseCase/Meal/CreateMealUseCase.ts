@@ -79,10 +79,6 @@ export class CreateMealUseCase {
         );
       }
 
-      if (ingredient.createdBy !== userId) {
-        throw new AppError("Solo puedes usar tus propios ingredientes", 403);
-      }
-
       const calories = (ingredient.caloriesPer100g * item.amount) / 100;
 
       ingredientDetails.push({

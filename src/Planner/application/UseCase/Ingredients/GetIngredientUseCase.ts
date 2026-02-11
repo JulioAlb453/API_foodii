@@ -16,9 +16,9 @@ export class GetIngredientsUseCase {
   constructor(private ingredientRepository: IngredientRepository) {}
 
   async execute(request: GetIngredientsRequest): Promise<IngredientResponse[]> {
-    const { userId, search } = request;
+    const { search } = request;
 
-    let ingredients = await this.ingredientRepository.findByUser(userId);
+    let ingredients = await this.ingredientRepository.findAll();
 
     if (search) {
       const searchLower = search.toLowerCase();

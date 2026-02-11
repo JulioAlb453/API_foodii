@@ -1,0 +1,164 @@
+{
+  "baseUrl": "/api",
+  "routes": [
+    {
+      "group": "auth",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/auth/register",
+          "auth": false,
+          "description": "Registrar nuevo usuario (username, password). Devuelve user + token."
+        },
+        {
+          "method": "POST",
+          "path": "/api/auth/login",
+          "auth": false,
+          "description": "Iniciar sesión. Devuelve user + token."
+        },
+        {
+          "method": "POST",
+          "path": "/api/auth/verify-token",
+          "auth": false,
+          "description": "Verificar token enviado en body: { \"token\": \"...\" }."
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/health",
+          "auth": false,
+          "description": "Health check del servicio de autenticación."
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/profile",
+          "auth": true,
+          "description": "Obtener perfil del usuario autenticado (Bearer token)."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/auth/profile",
+          "auth": true,
+          "description": "Actualizar perfil (username)."
+        },
+        {
+          "method": "GET",
+          "path": "/api/auth/verify-token",
+          "auth": true,
+          "description": "Verificar token del header Authorization."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/auth/account",
+          "auth": true,
+          "description": "Eliminar cuenta. Body: { \"password\": \"...\" }."
+        },
+        {
+          "method": "POST",
+          "path": "/api/auth/logout",
+          "auth": true,
+          "description": "Cerrar sesión."
+        }
+      ]
+    },
+    {
+      "group": "meals",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/meals",
+          "auth": false,
+          "description": "Crear comida. Body: name, date, mealTime, ingredients[]."
+        },
+        {
+          "method": "GET",
+          "path": "/api/meals",
+          "auth": false,
+          "description": "Listar todas las comidas (catálogo compartido). Query opcional: date."
+        },
+        {
+          "method": "GET",
+          "path": "/api/meals/calories-summary",
+          "auth": false,
+          "description": "Resumen de calorías. Query: date."
+        },
+        {
+          "method": "GET",
+          "path": "/api/meals/date-range",
+          "auth": false,
+          "description": "Comidas por rango de fechas. Query: startDate, endDate."
+        },
+        {
+          "method": "GET",
+          "path": "/api/meals/:id",
+          "auth": false,
+          "description": "Obtener una comida por id."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/meals/:id",
+          "auth": false,
+          "description": "Actualizar comida (solo el creador)."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/meals/:id",
+          "auth": false,
+          "description": "Eliminar comida (solo el creador)."
+        }
+      ]
+    },
+    {
+      "group": "ingredients",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/ingredients",
+          "auth": false,
+          "description": "Crear ingrediente. Body: name, caloriesPer100g."
+        },
+        {
+          "method": "GET",
+          "path": "/api/ingredients",
+          "auth": false,
+          "description": "Listar todos los ingredientes (catálogo compartido). Query opcional: search."
+        },
+        {
+          "method": "GET",
+          "path": "/api/ingredients/search",
+          "auth": false,
+          "description": "Buscar ingredientes. Query: q, limit (opcional)."
+        },
+        {
+          "method": "POST",
+          "path": "/api/ingredients/calculate-calories",
+          "auth": false,
+          "description": "Calcular calorías. Body: ingredientId, amount."
+        },
+        {
+          "method": "POST",
+          "path": "/api/ingredients/calculate-bulk-calories",
+          "auth": false,
+          "description": "Calcular calorías en lote. Body: ingredients[] (ingredientId, amount)."
+        },
+        {
+          "method": "GET",
+          "path": "/api/ingredients/:id",
+          "auth": false,
+          "description": "Obtener ingrediente por id."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/ingredients/:id",
+          "auth": false,
+          "description": "Actualizar ingrediente."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/ingredients/:id",
+          "auth": false,
+          "description": "Eliminar ingrediente."
+        }
+      ]
+    }
+  ]
+}

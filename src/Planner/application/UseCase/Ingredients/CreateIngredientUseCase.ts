@@ -29,13 +29,13 @@ export class CreateIngredientUseCase {
       throw new AppError('Las calorías no pueden ser negativas', 400);
     }
 
-    const userIngredients = await this.ingredientRepository.findByUser(userId);
-    const existingIngredient = userIngredients.find(
-      ingredient => ingredient.name.toLowerCase() === name.toLowerCase().trim()
+    const allIngredients = await this.ingredientRepository.findAll();
+    const existingIngredient = allIngredients.find(
+      (ingredient) =>
+        ingredient.name.toLowerCase() === name.toLowerCase().trim(),
     );
-
     if (existingIngredient) {
-      throw new AppError('Ya tienes un ingrediente con ese nombre', 409);
+      throw new AppError('Ya existe un ingrediente con ese nombre', 409);
     }
 
     const ingredient = Ingredients.create({

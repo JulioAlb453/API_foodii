@@ -9,14 +9,14 @@ export class DeleteIngredientUseCase {
   constructor(private ingredientRepository: IngredientRepository) {}
 
   async execute(request: DeleteIngredientRequest): Promise<boolean> {
-    const { id, userId } = request;
-    
-    const deleted = await this.ingredientRepository.delete(id, userId);
-    
+    const { id } = request;
+
+    const deleted = await this.ingredientRepository.delete(id);
+
     if (!deleted) {
-      throw new AppError('Ingrediente no encontrado o no tienes permiso para eliminarlo', 404);
+      throw new AppError('Ingrediente no encontrado', 404);
     }
-    
+
     return true;
   }
 }

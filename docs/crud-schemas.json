@@ -1,0 +1,406 @@
+{
+  "auth": {
+    "register": {
+      "method": "POST",
+      "path": "/api/auth/register",
+      "body": {
+        "username": "string (min 3)",
+        "password": "string (min 6)"
+      },
+      "exampleRequest": { "username": "maria", "password": "123456" },
+      "exampleResponse": {
+        "success": true,
+        "message": "Usuario registrado exitosamente",
+        "data": {
+          "user": { "id": "uuid", "username": "maria", "createdAt": "ISO8601" },
+          "token": "jwt...",
+          "tokenExpiresIn": "7d"
+        }
+      }
+    },
+    "login": {
+      "method": "POST",
+      "path": "/api/auth/login",
+      "body": {
+        "username": "string",
+        "password": "string"
+      },
+      "exampleRequest": { "username": "maria", "password": "123456" },
+      "exampleResponse": {
+        "success": true,
+        "message": "Login exitoso",
+        "data": {
+          "user": { "id": "uuid", "username": "maria", "createdAt": "ISO8601" },
+          "token": "jwt...",
+          "tokenExpiresIn": "7d"
+        }
+      }
+    },
+    "verifyTokenBody": {
+      "method": "POST",
+      "path": "/api/auth/verify-token",
+      "body": { "token": "string" },
+      "exampleRequest": { "token": "eyJhbGc..." },
+      "exampleResponse": { "success": true, "message": "Token válido", "data": { "isValid": true, "user": { "id": "uuid", "username": "..." } } }
+    },
+    "health": {
+      "method": "GET",
+      "path": "/api/auth/health",
+      "query": {},
+      "exampleResponse": { "success": true, "data": { "service": "authentication", "status": "operational" } }
+    },
+    "getProfile": {
+      "method": "GET",
+      "path": "/api/auth/profile",
+      "headers": { "Authorization": "Bearer <token>" },
+      "exampleResponse": { "success": true, "data": { "id": "uuid", "username": "maria", "createdAt": "ISO8601" } }
+    },
+    "updateProfile": {
+      "method": "PUT",
+      "path": "/api/auth/profile",
+      "headers": { "Authorization": "Bearer <token>" },
+      "body": { "username": "string (min 3)" },
+      "exampleRequest": { "username": "maria_nueva" },
+      "exampleResponse": { "success": true, "message": "Perfil actualizado exitosamente", "data": { "id": "uuid", "username": "maria_nueva", "createdAt": "ISO8601" } }
+    },
+    "deleteAccount": {
+      "method": "DELETE",
+      "path": "/api/auth/account",
+      "headers": { "Authorization": "Bearer <token>" },
+      "body": { "password": "string" },
+      "exampleRequest": { "password": "123456" },
+      "exampleResponse": { "success": true, "message": "Cuenta eliminada exitosamente" }
+    },
+    "logout": {
+      "method": "POST",
+      "path": "/api/auth/logout",
+      "headers": { "Authorization": "Bearer <token>" },
+      "exampleResponse": { "success": true, "message": "Logout exitoso" }
+    }
+  },
+  "meals": {
+    "create": {
+      "method": "POST",
+      "path": "/api/meals",
+      "body": {
+        "userId": "string (uuid)",
+        "name": "string (min 2)",
+        "date": "string (YYYY-MM-DD)",
+        "mealTime": "breakfast | lunch | dinner | snack",
+        "ingredients": [{ "ingredientId": "string (uuid)", "amount": "number (gramos)" }]
+      },
+      "exampleRequest": {
+        "userId": "user-uuid",
+        "name": "Desayuno Fit",
+        "date": "2026-02-05",
+        "mealTime": "breakfast",
+        "ingredients": [{ "ingredientId": "ing-uuid", "amount": 150 }]
+      },
+      "exampleResponse": {
+        "success": true,
+        "data": {
+          "id": "m1",
+          "name": "Desayuno Fit",
+          "date": "2026-02-06T00:00:00.000Z",
+          "mealTime": "breakfast",
+          "ingredients": [
+            { "ingredientId": "i4", "amount": 100, "ingredientName": "Huevo", "calories": 155 },
+            { "ingredientId": "i5", "amount": 100, "ingredientName": "Avena", "calories": 389 }
+          ],
+          "totalCalories": 450,
+          "createdAt": "2026-02-06T16:22:30.180Z"
+        }
+      }
+    },
+    "getAll": {
+      "method": "GET",
+      "path": "/api/meals",
+      "query": { "date": "string (opcional, YYYY-MM-DD)" },
+      "exampleResponse": {
+        "success": true,
+        "data": [
+          {
+            "id": "m1",
+            "name": "Desayuno Fit",
+            "date": "2026-02-06T00:00:00.000Z",
+            "mealTime": "breakfast",
+            "ingredients": [
+              {
+                "ingredientId": "i4",
+                "amount": 100,
+                "ingredientName": "Huevo",
+                "calories": 155
+              },
+              {
+                "ingredientId": "i5",
+                "amount": 100,
+                "ingredientName": "Avena",
+                "calories": 389
+              }
+            ],
+            "totalCalories": 450,
+            "createdAt": "2026-02-06T16:22:30.180Z"
+          },
+          {
+            "id": "d65fdbff-0381-11f1-9980-0affef701a83",
+            "name": "Cena Proteica",
+            "date": "2026-02-06T00:00:00.000Z",
+            "mealTime": "dinner",
+            "ingredients": [
+              {
+                "ingredientId": "d6611b58-0381-11f1-9980-0affef701a83",
+                "amount": 150,
+                "ingredientName": "Huevo",
+                "calories": 232.5
+              },
+              {
+                "ingredientId": "d6625aef-0381-11f1-9980-0affef701a83",
+                "amount": 100,
+                "ingredientName": "Aguacate",
+                "calories": 160
+              }
+            ],
+            "totalCalories": 550,
+            "createdAt": "2026-02-06T17:32:40.747Z"
+          },
+          {
+            "id": "m2",
+            "name": "Almuerzo Proteico",
+            "date": "2026-02-06T00:00:00.000Z",
+            "mealTime": "lunch",
+            "ingredients": [
+              {
+                "ingredientId": "i1",
+                "amount": 200,
+                "ingredientName": "Pechuga de Pollo",
+                "calories": 330
+              },
+              {
+                "ingredientId": "i2",
+                "amount": 150,
+                "ingredientName": "Arroz Blanco",
+                "calories": 195
+              },
+              {
+                "ingredientId": "i3",
+                "amount": 50,
+                "ingredientName": "Aguacate",
+                "calories": 80
+              }
+            ],
+            "totalCalories": 600,
+            "createdAt": "2026-02-06T16:22:30.180Z"
+          }
+        ]
+      }
+    },
+    "getById": {
+      "method": "GET",
+      "path": "/api/meals/:id",
+      "params": { "id": "string (uuid)" },
+      "exampleResponse": {
+        "success": true,
+        "data": {
+          "id": "m1",
+          "name": "Desayuno Fit",
+          "date": "2026-02-06T00:00:00.000Z",
+          "mealTime": "breakfast",
+          "ingredients": [
+            {
+              "ingredientId": "i4",
+              "amount": 100,
+              "ingredientName": "Huevo",
+              "calories": 155
+            },
+            {
+              "ingredientId": "i5",
+              "amount": 100,
+              "ingredientName": "Avena",
+              "calories": 389
+            }
+          ],
+          "totalCalories": 450,
+          "createdAt": "2026-02-06T16:22:30.180Z"
+        }
+      }
+    },
+    "update": {
+      "method": "PUT",
+      "path": "/api/meals/:id",
+      "params": { "id": "string (uuid)" },
+      "body": {
+        "userId": "string (uuid)",
+        "name": "string (opcional)",
+        "date": "string (opcional, YYYY-MM-DD)",
+        "mealTime": "string (opcional)",
+        "ingredients": "array (opcional)"
+      },
+      "exampleRequest": {
+        "userId": "user-uuid",
+        "name": "Almuerzo Proteico",
+        "date": "2026-02-05",
+        "mealTime": "lunch",
+        "ingredients": [{ "ingredientId": "uuid", "amount": 200 }]
+      },
+      "exampleResponse": {
+        "success": true,
+        "data": {
+          "id": "m2",
+          "name": "Almuerzo Proteico",
+          "date": "2026-02-06T00:00:00.000Z",
+          "mealTime": "lunch",
+          "ingredients": [
+            { "ingredientId": "i1", "amount": 200, "ingredientName": "Pechuga de Pollo", "calories": 330 },
+            { "ingredientId": "i2", "amount": 150, "ingredientName": "Arroz Blanco", "calories": 195 }
+          ],
+          "totalCalories": 525,
+          "createdAt": "2026-02-06T16:22:30.180Z"
+        }
+      }
+    },
+    "delete": {
+      "method": "DELETE",
+      "path": "/api/meals/:id",
+      "params": { "id": "string (uuid)" },
+      "body": { "userId": "string (uuid)" },
+      "exampleRequest": { "userId": "user-uuid" },
+      "exampleResponse": { "success": true, "data": { "deleted": true } }
+    },
+    "caloriesSummary": {
+      "method": "GET",
+      "path": "/api/meals/calories-summary",
+      "query": { "date": "string (YYYY-MM-DD)" },
+      "exampleResponse": {
+        "success": true,
+        "data": {
+          "totalCalories": 1050,
+          "mealsCount": 3,
+          "averageCaloriesPerMeal": 350,
+          "mealsByTime": { "breakfast": 1, "lunch": 1, "dinner": 1, "snack": 0 }
+        }
+      }
+    },
+    "dateRange": {
+      "method": "GET",
+      "path": "/api/meals/date-range",
+      "query": { "startDate": "string (YYYY-MM-DD)", "endDate": "string (YYYY-MM-DD)" },
+      "exampleResponse": {
+        "success": true,
+        "data": [
+          { "date": "2026-02-05", "totalCalories": 450, "meals": [] },
+          { "date": "2026-02-06", "totalCalories": 600, "meals": [] }
+        ]
+      }
+    }
+  },
+  "ingredients": {
+    "create": {
+      "method": "POST",
+      "path": "/api/ingredients",
+      "body": {
+        "name": "string (min 2)",
+        "caloriesPer100g": "number (>= 0)"
+      },
+      "exampleRequest": { "name": "Arroz", "caloriesPer100g": 130 },
+      "exampleResponse": {
+        "success": true,
+        "data": { "id": "uuid", "name": "Arroz", "caloriesPer100g": 130, "createdAt": "ISO8601" }
+      }
+    },
+    "getAll": {
+      "method": "GET",
+      "path": "/api/ingredients",
+      "query": { "search": "string (opcional)" },
+      "exampleResponse": {
+        "success": true,
+        "data": [
+          { "id": "uuid", "name": "Arroz", "caloriesPer100g": 130, "createdAt": "ISO8601" }
+        ]
+      }
+    },
+    "getById": {
+      "method": "GET",
+      "path": "/api/ingredients/:id",
+      "params": { "id": "string (uuid)" },
+      "exampleResponse": {
+        "success": true,
+        "data": {
+          "id": "uuid",
+          "name": "Arroz",
+          "caloriesPer100g": 130,
+          "createdBy": "uuid",
+          "createdAt": "ISO8601"
+        }
+      }
+    },
+    "update": {
+      "method": "PUT",
+      "path": "/api/ingredients/:id",
+      "params": { "id": "string (uuid)" },
+      "body": {
+        "name": "string (opcional, min 2)",
+        "caloriesPer100g": "number (opcional, >= 0)"
+      },
+      "exampleRequest": { "name": "Arroz integral", "caloriesPer100g": 112 },
+      "exampleResponse": {
+        "success": true,
+        "data": { "id": "uuid", "name": "Arroz integral", "caloriesPer100g": 112, "createdAt": "ISO8601" }
+      }
+    },
+    "delete": {
+      "method": "DELETE",
+      "path": "/api/ingredients/:id",
+      "params": { "id": "string (uuid)" },
+      "exampleResponse": { "success": true, "data": { "deleted": true } }
+    },
+    "search": {
+      "method": "GET",
+      "path": "/api/ingredients/search",
+      "query": { "q": "string (min 2)", "limit": "number (opcional, default 10)" },
+      "exampleResponse": {
+        "success": true,
+        "data": [{ "id": "uuid", "name": "Arroz", "caloriesPer100g": 130 }]
+      }
+    },
+    "calculateCalories": {
+      "method": "POST",
+      "path": "/api/ingredients/calculate-calories",
+      "body": { "ingredientId": "string (uuid)", "amount": "number (gramos)" },
+      "exampleRequest": { "ingredientId": "uuid", "amount": 150 },
+      "exampleResponse": {
+        "success": true,
+        "data": {
+          "ingredientId": "uuid",
+          "ingredientName": "Arroz",
+          "amount": 150,
+          "caloriesPer100g": 130,
+          "calculatedCalories": 195
+        }
+      }
+    },
+    "calculateBulkCalories": {
+      "method": "POST",
+      "path": "/api/ingredients/calculate-bulk-calories",
+      "body": {
+        "ingredients": [{ "ingredientId": "string (uuid)", "amount": "number" }]
+      },
+      "exampleRequest": {
+        "ingredients": [
+          { "ingredientId": "uuid1", "amount": 100 },
+          { "ingredientId": "uuid2", "amount": 50 }
+        ]
+      },
+      "exampleResponse": {
+        "success": true,
+        "data": {
+          "ingredients": [{ "ingredientId": "uuid1", "calculatedCalories": 130, "..." }],
+          "totalCalories": 195
+        }
+      }
+    }
+  },
+  "errorResponse": {
+    "success": false,
+    "error": "string (mensaje de error)"
+  }
+}

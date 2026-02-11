@@ -18,16 +18,15 @@ export class SearchIngredientsUseCase {
   async execute(
     request: SearchIngredientsRequest,
   ): Promise<SearchIngredientResponse[]> {
-    const { userId, query, limit = 10 } = request;
+    const { query, limit = 10 } = request;
 
     if (!query || query.trim().length < 2) {
       return [];
     }
 
-    const userIngredients = await this.ingredientRepository.findByUser(userId);
-
+    const allIngredients = await this.ingredientRepository.findAll();
     const searchTerm = query.toLowerCase().trim();
-    const filtered = userIngredients.filter((ingredient) =>
+    const filtered = allIngredients.filter((ingredient) =>
       ingredient.name.toLowerCase().includes(searchTerm),
     );
 

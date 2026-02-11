@@ -56,6 +56,14 @@ export class IngredientRepositoryMySQL implements IngredientRepository {
     return rowToIngredient(row);
   }
 
+  async findAll(): Promise<Ingredients[]> {
+    const [rows] = await this.pool.execute(
+      "SELECT id, name, calories_per_100g, created_by, created_at FROM ingredients ORDER BY name"
+    );
+    const list = (Array.isArray(rows) ? rows : []) as IngredientRow[];
+    return list.map(rowToIngredient);
+  }
+
   async findByUser(userId: string): Promise<Ingredients[]> {
     const [rows] = await this.pool.execute(
       "SELECT id, name, calories_per_100g, created_by, created_at FROM ingredients WHERE created_by = ? ORDER BY name",
@@ -65,10 +73,10 @@ export class IngredientRepositoryMySQL implements IngredientRepository {
     return list.map(rowToIngredient);
   }
 
-  async delete(id: string, userId: string): Promise<boolean> {
+  async delete(id: string): Promise<boolean> {
     const [result] = await this.pool.execute(
-      "DELETE FROM ingredients WHERE id = ? AND created_by = ?",
-      [id, userId]
+      "DELETE FROM ingredients WHERE id = ?",
+      [id]
     );
     const affected = (result as { affectedRows?: number }).affectedRows ?? 0;
     return affected > 0;

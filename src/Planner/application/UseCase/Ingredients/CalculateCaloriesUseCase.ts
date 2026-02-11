@@ -21,7 +21,7 @@ export class CalculateCaloriesUseCase {
   async execute(
     request: CalculateCaloriesRequest,
   ): Promise<CalculateCaloriesResponse> {
-    const { ingredientId, amount, userId } = request;
+    const { ingredientId, amount } = request;
 
     if (amount <= 0) {
       throw new AppError("La cantidad debe ser mayor que 0", 400);
@@ -31,10 +31,6 @@ export class CalculateCaloriesUseCase {
 
     if (!ingredient) {
       throw new AppError("Ingrediente no encontrado", 404);
-    }
-
-    if (ingredient.createdBy !== userId) {
-      throw new AppError("No tienes permiso para usar este ingrediente", 403);
     }
 
     const calculatedCalories = (ingredient.caloriesPer100g * amount) / 100;
