@@ -22,6 +22,8 @@ export class DeleteMealUseCase {
       throw new AppError("El ID de la comida es requerido", 400);
     }
 
+    // Nota: El userId sigue siendo necesario si tu repositorio lo pide 
+    // para el log o para la firma del método delete.
     if (!userId || userId.trim() === "") {
       throw new AppError("El ID del usuario es requerido", 400);
     }
@@ -32,9 +34,8 @@ export class DeleteMealUseCase {
       throw new AppError("Comida no encontrada", 404);
     }
 
-    if (meal.CreatedBy !== userId) {
-      throw new AppError("No tienes permiso para eliminar esta comida", 403);
-    }
+    // --- SE ELIMINÓ LA VALIDACIÓN DE PERMISOS (meal.CreatedBy !== userId) ---
+    // Ahora cualquier usuario que envíe un userId válido podrá borrar el platillo.
 
     const deleted = await this.mealRepository.delete(id, userId);
 

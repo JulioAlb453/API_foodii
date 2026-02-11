@@ -138,8 +138,8 @@ export class MealController {
 
   async delete(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user.id;
       const { id } = req.params;
+      const { userId } = req.body;
       const mealId = Array.isArray(id) ? id[0] : id;
 
       const result = await this.deleteMealUseCase.execute({
@@ -172,7 +172,6 @@ export class MealController {
     try {
       const userId = (req as any).user.id;
       const { date } = req.query;
-      
 
       const result = await this.calculateCaloriesUseCase.execute({
         userId,
