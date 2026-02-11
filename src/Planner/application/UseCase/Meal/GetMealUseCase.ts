@@ -2,7 +2,6 @@ import { MealRepository } from "src/Planner/Domain/interfaces/MealRepository";
 import { IngredientRepository } from "src/Planner/Domain/interfaces/IngredientRepository";
 
 interface GetMealsRequest {
-  userId: string;
   date?: string;
 }
 
