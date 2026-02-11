@@ -48,7 +48,7 @@ export class UpdateMealUseCase {
       throw new AppError("Comida no encontrada", 404);
     }
 
-    // Verificar que la comida pertenece al usuario
+    // Verificar que la comida pertenece al usuario (Seguimos validando que no edites comidas de otros)
     if (existingMeal.CreatedBy !== userId) {
       throw new AppError("No tienes permiso para actualizar esta comida", 403);
     }
@@ -59,12 +59,9 @@ export class UpdateMealUseCase {
     const updatedMealTime = mealTime || existingMeal.mealTime;
     const updatedIngredients = ingredients || existingMeal.ingredients;
 
-    // Validaciones
+    // Validaciones básicas
     if (updatedName.length < 2) {
-      throw new AppError(
-        "El nombre de la comida debe tener al menos 2 caracteres",
-        400,
-      );
+      throw new AppError("El nombre debe tener al menos 2 caracteres", 400);
     }
 
     if (!["breakfast", "lunch", "dinner", "snack"].includes(updatedMealTime)) {
@@ -80,25 +77,18 @@ export class UpdateMealUseCase {
 
     for (const item of updatedIngredients) {
       if (item.amount <= 0) {
-        throw new AppError(
-          "La cantidad del ingrediente debe ser mayor que 0",
-          400,
-        );
+        throw new AppError("La cantidad debe ser mayor que 0", 400);
       }
 
-      const ingredient = await this.ingredientRepository.findById(
-        item.ingredientId,
-      );
+      // Buscamos el ingrediente en el repositorio global
+      const ingredient = await this.ingredientRepository.findById(item.ingredientId);
+      
       if (!ingredient) {
-        throw new AppError(
-          `Ingrediente con ID ${item.ingredientId} no encontrado`,
-          404,
-        );
+        throw new AppError(`Ingrediente con ID ${item.ingredientId} no encontrado`, 404);
       }
 
-      if (ingredient.createdBy !== userId) {
-        throw new AppError("Solo puedes usar tus propios ingredientes", 403);
-      }
+      // --- SE ELIMINÓ LA VALIDACIÓN DE PROPIEDAD DEL INGREDIENTE ---
+      // Ahora cualquier usuario puede usar ingredientes creados por otros.
 
       const calories = (ingredient.caloriesPer100g * item.amount) / 100;
 
