@@ -109,7 +109,7 @@ export class MealController {
 
   async update(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user.id;
+      const userId = req.body.userId;
       const { id } = req.params;
       const { name, date, mealTime, ingredients } = req.body;
       const mealId = Array.isArray(id) ? id[0] : id;
