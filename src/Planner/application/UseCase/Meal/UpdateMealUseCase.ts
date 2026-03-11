@@ -13,6 +13,7 @@ interface UpdateMealRequest {
     amount: number;
   }>;
   userId: string;
+  image?: string | null;
 }
 
 interface MealIngredientResponse {
@@ -30,6 +31,7 @@ interface UpdateMealResponse {
   ingredients: MealIngredientResponse[];
   totalCalories: number;
   createdAt: Date;
+  image?: string | null;
 }
 
 export class UpdateMealUseCase {
@@ -39,7 +41,7 @@ export class UpdateMealUseCase {
   ) {}
 
   async execute(request: UpdateMealRequest): Promise<UpdateMealResponse> {
-    const { id, userId, name, date, mealTime, ingredients } = request;
+    const { id, userId, name, date, mealTime, ingredients, image } = request;
 
     // Buscar la comida existente
     const existingMeal = await this.mealRepository.findById(id);
@@ -58,6 +60,7 @@ export class UpdateMealUseCase {
     const updatedDate = date ? new Date(date) : existingMeal.date;
     const updatedMealTime = mealTime || existingMeal.mealTime;
     const updatedIngredients = ingredients || existingMeal.ingredients;
+    const updatedImage = image !== undefined ? image : existingMeal.image;
 
     // Validaciones básicas
     if (updatedName.length < 2) {
@@ -111,6 +114,7 @@ export class UpdateMealUseCase {
       CreatedBy: userId,
       createdAt: existingMeal.createdAt,
       totalCalories,
+      image: updatedImage || null,
     });
 
     await this.mealRepository.create(updatedMeal);
@@ -123,6 +127,7 @@ export class UpdateMealUseCase {
       ingredients: ingredientDetails,
       totalCalories,
       createdAt: updatedMeal.createdAt,
+      image: updatedMeal.image || null,
     };
   }
 }

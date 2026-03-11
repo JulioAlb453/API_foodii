@@ -9,4 +9,5 @@ export interface IMeal {
   CreatedBy: string;
   createdAt: Date;
   totalCalories: number;
+  image?: string | null;
 }
