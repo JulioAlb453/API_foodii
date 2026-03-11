@@ -1,8 +1,10 @@
+import fs from "fs";
 import multer from "multer";
 import path from "path";
 import { AppError } from "src/shared/Errors/AppErrors";
 
 const UPLOADS_DIR = path.join(process.cwd(), "uploads");
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 const ALLOWED_MIME_TYPES = [
   "image/jpeg",
