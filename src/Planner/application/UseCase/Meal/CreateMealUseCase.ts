@@ -12,6 +12,7 @@ interface CreateMealRequest {
     amount: number;
   }>;
   userId: string;
+  image?: string;
 }
 
 interface MealIngredientResponse {
@@ -29,6 +30,7 @@ interface CreateMealResponse {
   ingredients: MealIngredientResponse[];
   totalCalories: number;
   createdAt: Date;
+  image?: string;
 }
 
 export class CreateMealUseCase {
@@ -38,7 +40,7 @@ export class CreateMealUseCase {
   ) {}
 
   async execute(request: CreateMealRequest): Promise<CreateMealResponse> {
-    const { name, date, mealTime, ingredients, userId } = request;
+    const { name, date, mealTime, ingredients, userId, image } = request;
 
     if (!name || name.trim().length < 2) {
       throw new AppError(
@@ -91,7 +93,6 @@ export class CreateMealUseCase {
       totalCalories += calories;
     }
 
-    // Crear la comida
     const meal = Meal.create({
       id: crypto.randomUUID(),
       name: name.trim(),
@@ -104,6 +105,7 @@ export class CreateMealUseCase {
       CreatedBy: userId,
       createdAt: new Date(),
       totalCalories,
+      image,
     });
 
     // Guardar la comida
@@ -117,6 +119,7 @@ export class CreateMealUseCase {
       ingredients: ingredientDetails,
       totalCalories,
       createdAt: meal.createdAt,
+      image: meal.image,
     };
   }
 }

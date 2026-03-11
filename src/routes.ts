@@ -2,6 +2,7 @@ import { Express, RequestHandler } from "express";
 import { AuthController } from "src/Users/infrastructure/Controllers/UsersController";
 import { MealController } from "src/Planner/Infraestructure/Meals/Controllers/MealControllers";
 import { IngredientController } from "src/Planner/Infraestructure/Ingredients/Controllers/IngredientsController";
+import { upload } from "src/Core/Infraestructure/Middleware/upload.middleware";
 
 export interface RouteDependencies {
   authController: AuthController;
@@ -47,7 +48,7 @@ export function registerRoutes(app: Express, deps: RouteDependencies): void {
   );
 
   // ----- Meals (requieren Authorization: Bearer <token>) -----
-  app.post("/api/meals", authMiddleware, (req, res) =>
+  app.post("/api/meals", authMiddleware, upload.single("image"), (req, res) =>
     mealController.create(req, res)
   );
   app.get("/api/meals", authMiddleware, (req, res) =>
@@ -62,7 +63,7 @@ export function registerRoutes(app: Express, deps: RouteDependencies): void {
   app.get("/api/meals/:id", authMiddleware, (req, res) =>
     mealController.getById(req, res)
   );
-  app.put("/api/meals/:id", authMiddleware, (req, res) =>
+  app.put("/api/meals/:id", authMiddleware, upload.single("image"), (req, res) =>
     mealController.update(req, res)
   );
   app.delete("/api/meals/:id", authMiddleware, (req, res) =>

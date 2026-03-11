@@ -21,9 +21,14 @@ export class MealController {
 
   async create(req: Request, res: Response): Promise<void> {
     try {
-      const { userId,name, date, mealTime, ingredients } = req.body;
+      const { userId, name, date, mealTime } = req.body;
 
-      if (! userId || !name || !date || !mealTime || !ingredients) {
+      let ingredients = req.body.ingredients;
+      if (typeof ingredients === "string") {
+        ingredients = JSON.parse(ingredients);
+      }
+
+      if (!userId || !name || !date || !mealTime || !ingredients) {
         res.status(400).json({
           success: false,
           error: "name, date, mealTime y ingredients son requeridos",
@@ -31,12 +36,15 @@ export class MealController {
         return;
       }
 
+      const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+
       const result = await this.createMealUseCase.execute({
         name,
         date,
         mealTime,
         ingredients,
         userId,
+        image,
       });
 
       res.status(201).json({
@@ -102,8 +110,15 @@ export class MealController {
     try {
       const userId = req.body.userId;
       const { id } = req.params;
-      const { name, date, mealTime, ingredients } = req.body;
+      const { name, date, mealTime } = req.body;
       const mealId = Array.isArray(id) ? id[0] : id;
+
+      let ingredients = req.body.ingredients;
+      if (typeof ingredients === "string") {
+        ingredients = JSON.parse(ingredients);
+      }
+
+      const image = req.file ? `/uploads/${req.file.filename}` : undefined;
 
       const result = await this.updateMealUseCase.execute({
         id: mealId,
@@ -112,6 +127,7 @@ export class MealController {
         mealTime,
         ingredients,
         userId,
+        image,
       });
 
       res.status(200).json({

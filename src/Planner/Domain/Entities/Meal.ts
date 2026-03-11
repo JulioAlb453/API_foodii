@@ -11,9 +11,9 @@ export class Meal implements IMeal {
     public readonly CreatedBy: string,
     public readonly createdAt: Date,
     public readonly totalCalories: number,
+    public readonly image?: string,
   ) {}
 
-  
   static create(data: IMeal): Meal {
     return new Meal(
       data.id,
@@ -23,7 +23,9 @@ export class Meal implements IMeal {
       data.ingredients,
       data.CreatedBy,
       data.createdAt,
-      data.totalCalories
+
+      data.totalCalories,
+      data.image,
     );
   }
 }
