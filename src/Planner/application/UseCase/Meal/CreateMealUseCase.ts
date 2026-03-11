@@ -12,7 +12,7 @@ interface CreateMealRequest {
     amount: number;
   }>;
   userId: string;
-  image?: string;
+  image?: string | null;
 }
 
 interface MealIngredientResponse {
@@ -30,7 +30,7 @@ interface CreateMealResponse {
   ingredients: MealIngredientResponse[];
   totalCalories: number;
   createdAt: Date;
-  image?: string;
+  image?: string | null;
 }
 
 export class CreateMealUseCase {

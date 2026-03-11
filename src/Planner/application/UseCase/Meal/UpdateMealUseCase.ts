@@ -13,7 +13,7 @@ interface UpdateMealRequest {
     amount: number;
   }>;
   userId: string;
-  image?: string;
+  image?: string | null;
 }
 
 interface MealIngredientResponse {
@@ -31,7 +31,7 @@ interface UpdateMealResponse {
   ingredients: MealIngredientResponse[];
   totalCalories: number;
   createdAt: Date;
-  image?: string;
+  image?: string | null;
 }
 
 export class UpdateMealUseCase {
@@ -60,6 +60,7 @@ export class UpdateMealUseCase {
     const updatedDate = date ? new Date(date) : existingMeal.date;
     const updatedMealTime = mealTime || existingMeal.mealTime;
     const updatedIngredients = ingredients || existingMeal.ingredients;
+    const updatedImage = image !== undefined ? image : existingMeal.image;
 
     // Validaciones básicas
     if (updatedName.length < 2) {
@@ -103,8 +104,6 @@ export class UpdateMealUseCase {
 
       totalCalories += calories;
     }
-
-    const updatedImage = image !== undefined ? image : existingMeal.image;
 
     const updatedMeal = Meal.create({
       id: existingMeal.id,

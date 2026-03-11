@@ -30,7 +30,7 @@ function rowToMeal(row: MealRow, ingredients: IMealIngredient[]): Meal {
     CreatedBy: row.created_by,
     createdAt: row.created_at instanceof Date ? row.created_at : new Date(row.created_at),
     totalCalories: Number(row.total_calories),
-    image: row.image ?? undefined,
+    image: row.image ?? null,
   });
 }
 
