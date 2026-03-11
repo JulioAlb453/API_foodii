@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS meals (
   created_by     VARCHAR(36)   NOT NULL,
   created_at     DATETIME(3)   NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   total_calories DECIMAL(10,2) NOT NULL DEFAULT 0,
+  image          LONGTEXT      NULL COMMENT 'URL o base64 de la imagen',
   PRIMARY KEY (id),
   KEY idx_meals_created_by (created_by),
   KEY idx_meals_date (date),
