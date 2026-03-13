@@ -7,6 +7,7 @@ require("dotenv/config");
 require("module-alias/register");
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
+const path_1 = __importDefault(require("path"));
 const routes_1 = require("./routes");
 const connection_1 = require("src/Core/Infraestructure/Database/connection");
 const auth_dependencies_1 = require("src/Users/infrastructure/auth.dependencies");
@@ -16,10 +17,12 @@ const ingredient_dependencies_1 = require("src/Planner/Infraestructure/Ingredien
 const IngredientRepository_mysql_1 = require("src/Planner/Infraestructure/Ingredients/Repositories/IngredientRepository.mysql");
 const meal_dependencies_1 = require("src/Planner/Infraestructure/Meals/meal.dependencies");
 const MealRepository_mysql_1 = require("src/Planner/Infraestructure/Meals/Repositories/MealRepository.mysql");
+const dish_dependencies_1 = require("src/Planner/Infraestructure/Dishes/dish.dependencies");
 const PORT = Number(process.env.PORT) || 3000;
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
 app.use(express_1.default.json());
+app.use("/uploads", express_1.default.static(path_1.default.join(process.cwd(), "uploads")));
 const pool = (0, connection_1.getPool)();
 const userRepository = new UserRepository_mysql_1.UserRepositoryMySQL(pool);
 const ingredientRepository = new IngredientRepository_mysql_1.IngredientRepositoryMySQL(pool);
@@ -39,6 +42,7 @@ const authMiddleware = (0, auth_middleware_1.createAuthMiddleware)(tokenService)
     authController,
     mealController,
     ingredientController,
+    dishController: dish_dependencies_1.dishController,
     authMiddleware,
 });
 app.listen(PORT, '0.0.0.0', () => {

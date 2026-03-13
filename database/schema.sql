@@ -77,3 +77,20 @@ CREATE TABLE IF NOT EXISTS meal_ingredients (
 -- ---------------------------------------------
 CREATE INDEX idx_ingredients_name ON ingredients (name(50));
 CREATE INDEX idx_ingredients_created_by_name ON ingredients (created_by, name(50));
+
+-- ---------------------------------------------
+-- Tabla: dishes
+-- ---------------------------------------------
+CREATE TABLE IF NOT EXISTS dishes (
+  id             VARCHAR(36)   NOT NULL,
+  name           VARCHAR(200)  NOT NULL,
+  description    TEXT          NULL,
+  calories       DECIMAL(10,2) NOT NULL DEFAULT 0,
+  image          VARCHAR(500)  NULL,
+  created_by     VARCHAR(36)   NOT NULL,
+  created_at     DATETIME(3)   NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (id),
+  KEY idx_dishes_created_by (created_by),
+  CONSTRAINT fk_dishes_created_by
+    FOREIGN KEY (created_by) REFERENCES users (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
