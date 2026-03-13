@@ -7,6 +7,7 @@ import { UpdateMealUseCase } from "src/Planner/application/UseCase/Meal/UpdateMe
 import { DeleteMealUseCase } from "src/Planner/application/UseCase/Meal/DeleteMealUseCase";
 import { CalculateCaloriesUseCase } from "src/Planner/application/UseCase/Meal/CalCulateCaloriesUseCase";
 import { GetMealsByDateRangeUseCase } from "src/Planner/application/UseCase/Meal/GetMealsByDateRangeUseCase";
+import { GetRandomMealUseCase } from "src/Planner/application/UseCase/Meal/GetRandomMealUseCase";
 import { MealController } from "./Controllers/MealControllers";
 
 export interface MealDependenciesOptions {
@@ -41,6 +42,10 @@ export function createMealDependencies(options?: MealDependenciesOptions) {
     mealRepository,
     ingredientRepository
   );
+  const getRandomMealUseCase = new GetRandomMealUseCase(
+    mealRepository,
+    ingredientRepository
+  );
 
   const mealController = new MealController(
     createMealUseCase,
@@ -49,7 +54,8 @@ export function createMealDependencies(options?: MealDependenciesOptions) {
     updateMealUseCase,
     deleteMealUseCase,
     calculateCaloriesUseCase,
-    getMealsByDateRangeUseCase
+    getMealsByDateRangeUseCase,
+    getRandomMealUseCase
   );
 
   return {
@@ -63,5 +69,6 @@ export function createMealDependencies(options?: MealDependenciesOptions) {
     deleteMealUseCase,
     calculateCaloriesUseCase,
     getMealsByDateRangeUseCase,
+    getRandomMealUseCase,
   };
 }

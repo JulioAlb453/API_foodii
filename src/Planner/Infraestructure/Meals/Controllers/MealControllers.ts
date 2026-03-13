@@ -7,6 +7,7 @@ import { DeleteMealUseCase } from "src/Planner/application/UseCase/Meal/DeleteMe
 import { CalculateCaloriesUseCase } from "src/Planner/application/UseCase/Meal/CalCulateCaloriesUseCase";
 import { GetMealsByDateRangeUseCase } from "src/Planner/application/UseCase/Meal/GetMealsByDateRangeUseCase";
 import { GetMealsUseCase } from "src/Planner/application/UseCase/Meal/GetMealUseCase";
+import { GetRandomMealUseCase } from "src/Planner/application/UseCase/Meal/GetRandomMealUseCase";
 
 export class MealController {
   constructor(
@@ -17,6 +18,7 @@ export class MealController {
     private deleteMealUseCase: DeleteMealUseCase,
     private calculateCaloriesUseCase: CalculateCaloriesUseCase,
     private getMealsByDateRangeUseCase: GetMealsByDateRangeUseCase,
+    private getRandomMealUseCase: GetRandomMealUseCase,
   ) {}
 
   async create(req: Request, res: Response): Promise<void> {
@@ -165,6 +167,25 @@ export class MealController {
       res.status(200).json({
         success: true,
         data: { deleted: result },
+      });
+    } catch (error: any) {
+      const statusCode = error.statusCode || 500;
+      res.status(statusCode).json({
+        success: false,
+        error: error.message,
+      });
+    }
+  }
+
+  async getRandom(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = (req as any).user.id;
+
+      const result = await this.getRandomMealUseCase.execute(userId);
+
+      res.status(200).json({
+        success: true,
+        data: result,
       });
     } catch (error: any) {
       const statusCode = error.statusCode || 500;

@@ -11,6 +11,7 @@ export interface MealRepository {
     findByDateRange(startDate: Date, endDate: Date): Promise<Meal[]>;
     findByUserAndDate(userId: string, date: Date): Promise<Meal[]>;
     findByUser(userId: string): Promise<Meal[]>;
+    getRandomMeal(userId: string): Promise<Meal | null>;
     delete(id: string, userId: string): Promise<boolean>;
 }
 
@@ -82,6 +83,12 @@ export class MealRepositories implements MealRepository{
     }
     
     return userMeals.sort((a, b) => b.date.getTime() - a.date.getTime());
+  }
+
+  async getRandomMeal(userId: string): Promise<Meal | null> {
+    const userMeals = await this.findByUser(userId);
+    if (userMeals.length === 0) return null;
+    return userMeals[Math.floor(Math.random() * userMeals.length)];
   }
 
   async delete(id: string, userId: string): Promise<boolean> {
