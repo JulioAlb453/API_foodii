@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { DishService } from "../../../Application/Dishes/DishService";
+import { DishService } from "../../../application/Dishes/DishService";
 
 export class DishController {
   constructor(private dishService: DishService) {}
