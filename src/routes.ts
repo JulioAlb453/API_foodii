@@ -63,6 +63,9 @@ export function registerRoutes(app: Express, deps: RouteDependencies): void {
   app.get("/api/meals/date-range", authMiddleware, (req, res) =>
     mealController.getByDateRange(req, res)
   );
+  app.get("/api/meals/random", authMiddleware, (req, res) =>
+    mealController.getRandom(req, res)
+  );
   app.get("/api/meals/:id", authMiddleware, (req, res) =>
     mealController.getById(req, res)
   );
