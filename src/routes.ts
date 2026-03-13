@@ -2,12 +2,14 @@ import { Express, RequestHandler } from "express";
 import { AuthController } from "src/Users/infrastructure/Controllers/UsersController";
 import { MealController } from "src/Planner/Infraestructure/Meals/Controllers/MealControllers";
 import { IngredientController } from "src/Planner/Infraestructure/Ingredients/Controllers/IngredientsController";
+import { DishController } from "src/Planner/Infraestructure/Dishes/Controllers/DishControllers";
 import { upload } from "src/Core/Infraestructure/Middleware/upload.middleware";
 
 export interface RouteDependencies {
   authController: AuthController;
   mealController: MealController;
   ingredientController: IngredientController;
+  dishController: DishController;
   authMiddleware: RequestHandler;
 }
 
@@ -16,6 +18,7 @@ export function registerRoutes(app: Express, deps: RouteDependencies): void {
     authController,
     mealController,
     ingredientController,
+    dishController,
     authMiddleware,
   } = deps;
 
@@ -96,5 +99,24 @@ export function registerRoutes(app: Express, deps: RouteDependencies): void {
   );
   app.delete("/api/ingredients/:id", authMiddleware, (req, res) =>
     ingredientController.delete(req, res)
+  );
+
+  app.post("/api/dishes", authMiddleware, upload.single("image"), (req, res) =>
+    dishController.create(req, res)
+  );
+  app.get("/api/dishes", authMiddleware, (req, res) =>
+    dishController.getAll(req, res)
+  );
+  app.get("/api/dishes/random", authMiddleware, (req, res) =>
+    dishController.getRandom(req, res)
+  );
+  app.get("/api/dishes/:id", authMiddleware, (req, res) =>
+    dishController.getById(req, res)
+  );
+  app.put("/api/dishes/:id", authMiddleware, upload.single("image"), (req, res) =>
+    dishController.update(req, res)
+  );
+  app.delete("/api/dishes/:id", authMiddleware, (req, res) =>
+    dishController.delete(req, res)
   );
 }
