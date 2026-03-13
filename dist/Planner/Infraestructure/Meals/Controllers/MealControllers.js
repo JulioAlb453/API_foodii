@@ -13,7 +13,11 @@ class MealController {
     }
     async create(req, res) {
         try {
-            const { userId, name, date, mealTime, ingredients } = req.body;
+            const { userId, name, date, mealTime } = req.body;
+            let ingredients = req.body.ingredients;
+            if (typeof ingredients === "string") {
+                ingredients = JSON.parse(ingredients);
+            }
             if (!userId || !name || !date || !mealTime || !ingredients) {
                 res.status(400).json({
                     success: false,
@@ -21,12 +25,14 @@ class MealController {
                 });
                 return;
             }
+            const image = req.file ? `/uploads/${req.file.filename}` : undefined;
             const result = await this.createMealUseCase.execute({
                 name,
                 date,
                 mealTime,
                 ingredients,
                 userId,
+                image,
             });
             res.status(201).json({
                 success: true,
@@ -86,8 +92,13 @@ class MealController {
         try {
             const userId = req.body.userId;
             const { id } = req.params;
-            const { name, date, mealTime, ingredients } = req.body;
+            const { name, date, mealTime } = req.body;
             const mealId = Array.isArray(id) ? id[0] : id;
+            let ingredients = req.body.ingredients;
+            if (typeof ingredients === "string") {
+                ingredients = JSON.parse(ingredients);
+            }
+            const image = req.file ? `/uploads/${req.file.filename}` : undefined;
             const result = await this.updateMealUseCase.execute({
                 id: mealId,
                 name,
@@ -95,6 +106,7 @@ class MealController {
                 mealTime,
                 ingredients,
                 userId,
+                image,
             });
             res.status(200).json({
                 success: true,

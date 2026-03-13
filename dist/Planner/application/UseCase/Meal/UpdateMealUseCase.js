@@ -9,7 +9,7 @@ class UpdateMealUseCase {
         this.ingredientRepository = ingredientRepository;
     }
     async execute(request) {
-        const { id, userId, name, date, mealTime, ingredients } = request;
+        const { id, userId, name, date, mealTime, ingredients, image } = request;
         // Buscar la comida existente
         const existingMeal = await this.mealRepository.findById(id);
         if (!existingMeal) {
@@ -24,6 +24,7 @@ class UpdateMealUseCase {
         const updatedDate = date ? new Date(date) : existingMeal.date;
         const updatedMealTime = mealTime || existingMeal.mealTime;
         const updatedIngredients = ingredients || existingMeal.ingredients;
+        const updatedImage = image !== undefined ? image : existingMeal.image;
         // Validaciones básicas
         if (updatedName.length < 2) {
             throw new AppErrors_1.AppError("El nombre debe tener al menos 2 caracteres", 400);
@@ -65,6 +66,7 @@ class UpdateMealUseCase {
             CreatedBy: userId,
             createdAt: existingMeal.createdAt,
             totalCalories,
+            image: updatedImage,
         });
         await this.mealRepository.create(updatedMeal);
         return {
@@ -75,6 +77,7 @@ class UpdateMealUseCase {
             ingredients: ingredientDetails,
             totalCalories,
             createdAt: updatedMeal.createdAt,
+            image: updatedMeal.image,
         };
     }
 }

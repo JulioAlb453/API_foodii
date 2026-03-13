@@ -9,7 +9,7 @@ class CreateMealUseCase {
         this.ingredientRepository = ingredientRepository;
     }
     async execute(request) {
-        const { name, date, mealTime, ingredients, userId } = request;
+        const { name, date, mealTime, ingredients, userId, image } = request;
         if (!name || name.trim().length < 2) {
             throw new AppErrors_1.AppError("El nombre de la comida debe tener al menos 2 caracteres", 400);
         }
@@ -38,7 +38,6 @@ class CreateMealUseCase {
             });
             totalCalories += calories;
         }
-        // Crear la comida
         const meal = Meal_1.Meal.create({
             id: crypto.randomUUID(),
             name: name.trim(),
@@ -51,6 +50,7 @@ class CreateMealUseCase {
             CreatedBy: userId,
             createdAt: new Date(),
             totalCalories,
+            image,
         });
         // Guardar la comida
         await this.mealRepository.create(meal);
@@ -62,6 +62,7 @@ class CreateMealUseCase {
             ingredients: ingredientDetails,
             totalCalories,
             createdAt: meal.createdAt,
+            image: meal.image,
         };
     }
 }
