@@ -1,5 +1,5 @@
 import { DishRepositoryMySQL } from "./Repositories/DishRepository.mysql";
-import { DishService } from "../../Application/Dishes/DishService";
+import { DishService } from "../../application/Dishes/DishService";
 import { DishController } from "./Controllers/DishControllers";
 
 const dishRepo = new DishRepositoryMySQL();
