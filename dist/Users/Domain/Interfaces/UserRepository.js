@@ -21,5 +21,16 @@ class UserRepositories {
     async findById(id) {
         return this.users.get(id) || null;
     }
+    async assignFcmTokenExclusive(userId, fcmToken) {
+        for (const u of this.users.values()) {
+            if (u.id !== userId && u.fcmToken === fcmToken) {
+                u.fcmToken = null;
+            }
+        }
+        const user = this.users.get(userId);
+        if (user) {
+            user.fcmToken = fcmToken;
+        }
+    }
 }
 exports.UserRepositories = UserRepositories;

@@ -62,7 +62,7 @@ class AuthController {
      */
     async login(req, res) {
         try {
-            const { username, password } = req.body;
+            const { username, password, fcmToken } = req.body;
             // Validaciones básicas
             if (!username || !password) {
                 res.status(400).json({
@@ -73,7 +73,8 @@ class AuthController {
             }
             const result = await this.loginUserUseCase.execute({
                 username,
-                password
+                password,
+                fcmToken: fcmToken === null || fcmToken === undefined ? undefined : fcmToken,
             });
             res.status(200).json({
                 success: true,
@@ -238,7 +239,7 @@ class AuthController {
                 // Intentar login para verificar contraseña
                 await this.loginUserUseCase.execute({
                     username: profile.username,
-                    password
+                    password,
                 });
             }
             catch (error) {

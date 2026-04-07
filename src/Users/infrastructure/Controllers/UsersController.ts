@@ -73,7 +73,7 @@ export class AuthController {
    */
   async login(req: Request, res: Response): Promise<void> {
     try {
-      const { username, password } = req.body;
+      const { username, password, fcmToken } = req.body;
 
       // Validaciones básicas
       if (!username || !password) {
@@ -86,7 +86,8 @@ export class AuthController {
 
       const result = await this.loginUserUseCase.execute({
         username,
-        password
+        password,
+        fcmToken: fcmToken === null || fcmToken === undefined ? undefined : fcmToken,
       });
 
       res.status(200).json({
@@ -257,15 +258,12 @@ export class AuthController {
         return;
       }
 
-      // Primero verificar la contraseña intentando hacer login
       try {
-        // Obtener el username del perfil
         const profile = await this.getUserProfileUseCase.execute({ userId });
         
-        // Intentar login para verificar contraseña
         await this.loginUserUseCase.execute({
           username: profile.username,
-          password
+          password,
         });
       } catch (error) {
         res.status(401).json({
@@ -275,10 +273,9 @@ export class AuthController {
         return;
       }
 
-      // Si la contraseña es correcta, eliminar cuenta
       const result = await this.deleteAccountUseCase.execute({
         userId,
-        password // Se pasa aunque el caso de uso pueda no usarlo
+        password 
       });
 
       res.status(200).json({
@@ -295,13 +292,10 @@ export class AuthController {
     }
   }
 
-  /**
-   * Logout (solo en frontend, pero podemos invalidar token si usamos blacklist)
-   */
+
   async logout(req: Request, res: Response): Promise<void> {
     try {
-      // En una implementación real con blacklist de tokens
-      // invalidaríamos el token aquí
+
       
       res.status(200).json({
         success: true,
@@ -319,9 +313,7 @@ export class AuthController {
     }
   }
 
-  /**
-   * Health check de autenticación
-   */
+
   async authHealth(req: Request, res: Response): Promise<void> {
     try {
       res.status(200).json({

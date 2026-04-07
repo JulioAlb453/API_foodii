@@ -4,6 +4,8 @@ export interface UserRepository {
   create(user: User): Promise<User>;
   findById(id: string): Promise<User | null>;
   findByUsername(username: string): Promise<User | null>;
+
+  assignFcmTokenExclusive(userId: string, fcmToken: string): Promise<void>;
 }
 
 export class UserRepositories implements UserRepository {
@@ -28,5 +30,17 @@ export class UserRepositories implements UserRepository {
 
   async findById(id: string): Promise<User | null> {
     return this.users.get(id) || null;
+  }
+
+  async assignFcmTokenExclusive(userId: string, fcmToken: string): Promise<void> {
+    for (const u of this.users.values()) {
+      if (u.id !== userId && u.fcmToken === fcmToken) {
+        u.fcmToken = null;
+      }
+    }
+    const user = this.users.get(userId);
+    if (user) {
+      user.fcmToken = fcmToken;
+    }
   }
 }

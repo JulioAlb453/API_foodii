@@ -62,6 +62,12 @@ class MealRepositories {
         }
         return userMeals.sort((a, b) => b.date.getTime() - a.date.getTime());
     }
+    async getRandomMeal(userId) {
+        const userMeals = await this.findByUser(userId);
+        if (userMeals.length === 0)
+            return null;
+        return userMeals[Math.floor(Math.random() * userMeals.length)];
+    }
     async delete(id, userId) {
         const meal = await this.findById(id);
         if (meal && meal.CreatedBy === userId) {

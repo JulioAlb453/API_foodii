@@ -21,6 +21,7 @@ class RegisterUserUseCase {
             id: (0, crypto_1.randomUUID)(),
             username: cleanUsername,
             password: hashedPassword,
+            fcmToken: null,
             createdAt: now,
             updatedAt: now,
         });

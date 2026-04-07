@@ -2,15 +2,16 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.User = void 0;
 class User {
-    constructor(id, username, password, createdAt, updatedAt) {
+    constructor(id, username, password, createdAt, updatedAt, fcmToken) {
         this.id = id;
         this.username = username;
         this.password = password;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
+        this.fcmToken = fcmToken;
     }
     static create(data) {
-        return new User(data.id, data.username, data.password, data.createdAt, data.updatedAt);
+        return new User(data.id, data.username, data.password, data.createdAt, data.updatedAt, data.fcmToken ?? null);
     }
 }
 exports.User = User;

@@ -9,29 +9,44 @@ class LoginUserUseCase {
         this.tokenService = tokenService;
     }
     async execute(request) {
-        const { username, password } = request;
-        // 1. Validaciones de entrada
+        const { username, password, fcmToken } = request;
         this.validateInput(username, password);
-        // 2. Normalizar y limpiar datos
         const cleanUsername = this.cleanUsername(username);
-        // 3. Buscar usuario
         const user = await this.findUser(cleanUsername);
-        // 4. Verificar contraseña
         await this.verifyPassword(password, user.password);
-        // 5. Generar token
         const token = this.generateToken(user);
-        // 6. Retornar respuesta
+        await this.persistFcmTokenIfPresent(user.id, fcmToken);
         return this.buildResponse(user, token);
+    }
+    /**
+     * Si viene un token FCM no vacío, lo guarda para este usuario y lo quita de otros.
+     * Si es null/undefined/vacío, no hace nada (no rompe el login).
+     * Si falla la BD, el login sigue siendo exitoso (solo se registra en consola).
+     */
+    async persistFcmTokenIfPresent(userId, fcmToken) {
+        if (fcmToken === null || fcmToken === undefined) {
+            return;
+        }
+        const trimmed = typeof fcmToken === "string" ? fcmToken.trim() : "";
+        if (trimmed.length === 0) {
+            return;
+        }
+        try {
+            await this.userRepository.assignFcmTokenExclusive(userId, trimmed);
+        }
+        catch (err) {
+            console.error("[LoginUserUseCase] No se pudo guardar fcmToken:", err);
+        }
     }
     validateInput(username, password) {
         if (!username || username.trim().length === 0) {
-            throw new AppErrors_1.AppError('El username es requerido', 400);
+            throw new AppErrors_1.AppError("El username es requerido", 400);
         }
         if (!password || password.length === 0) {
-            throw new AppErrors_1.AppError('La contraseña es requerida', 400);
+            throw new AppErrors_1.AppError("La contraseña es requerida", 400);
         }
         if (password.length < 6) {
-            throw new AppErrors_1.AppError('La contraseña debe tener al menos 6 caracteres', 400);
+            throw new AppErrors_1.AppError("La contraseña debe tener al menos 6 caracteres", 400);
         }
     }
     cleanUsername(username) {
@@ -40,26 +55,25 @@ class LoginUserUseCase {
     async findUser(username) {
         const user = await this.userRepository.findByUsername(username);
         if (!user) {
-            // No revelar si el usuario existe o no (seguridad)
-            throw new AppErrors_1.AppError('Credenciales incorrectas', 401);
+            throw new AppErrors_1.AppError("Credenciales incorrectas", 401);
         }
         return user;
     }
     async verifyPassword(inputPassword, storedHash) {
         const isValid = await this.hashService.compare(inputPassword, storedHash);
         if (!isValid) {
-            throw new AppErrors_1.AppError('Credenciales incorrectas', 401);
+            throw new AppErrors_1.AppError("Credenciales incorrectas", 401);
         }
     }
     generateToken(user) {
         try {
             return this.tokenService.generate({
                 id: user.id,
-                username: user.username
+                username: user.username,
             });
         }
-        catch (error) {
-            throw new AppErrors_1.AppError('Error al generar token de autenticación', 500);
+        catch {
+            throw new AppErrors_1.AppError("Error al generar token de autenticación", 500);
         }
     }
     buildResponse(user, token) {
@@ -67,10 +81,10 @@ class LoginUserUseCase {
             user: {
                 id: user.id,
                 username: user.username,
-                createdAt: user.createdAt
+                createdAt: user.createdAt,
             },
             token,
-            tokenExpiresIn: '7d' // Esto debería venir del TokenService
+            tokenExpiresIn: "7d",
         };
     }
 }

@@ -19,6 +19,7 @@ function registerRoutes(app, deps) {
     app.get("/api/meals", authMiddleware, (req, res) => mealController.getAll(req, res));
     app.get("/api/meals/calories-summary", authMiddleware, (req, res) => mealController.getCaloriesSummary(req, res));
     app.get("/api/meals/date-range", authMiddleware, (req, res) => mealController.getByDateRange(req, res));
+    app.get("/api/meals/random", authMiddleware, (req, res) => mealController.getRandom(req, res));
     app.get("/api/meals/:id", authMiddleware, (req, res) => mealController.getById(req, res));
     app.put("/api/meals/:id", authMiddleware, upload_middleware_1.upload.single("image"), (req, res) => mealController.update(req, res));
     app.delete("/api/meals/:id", authMiddleware, (req, res) => mealController.delete(req, res));

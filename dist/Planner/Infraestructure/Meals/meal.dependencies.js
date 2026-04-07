@@ -10,6 +10,7 @@ const UpdateMealUseCase_1 = require("src/Planner/application/UseCase/Meal/Update
 const DeleteMealUseCase_1 = require("src/Planner/application/UseCase/Meal/DeleteMealUseCase");
 const CalCulateCaloriesUseCase_1 = require("src/Planner/application/UseCase/Meal/CalCulateCaloriesUseCase");
 const GetMealsByDateRangeUseCase_1 = require("src/Planner/application/UseCase/Meal/GetMealsByDateRangeUseCase");
+const GetRandomMealUseCase_1 = require("src/Planner/application/UseCase/Meal/GetRandomMealUseCase");
 const MealControllers_1 = require("./Controllers/MealControllers");
 function createMealDependencies(options) {
     const mealRepository = options?.mealRepository ?? new MealRepository_1.MealRepositories();
@@ -21,7 +22,8 @@ function createMealDependencies(options) {
     const deleteMealUseCase = new DeleteMealUseCase_1.DeleteMealUseCase(mealRepository);
     const calculateCaloriesUseCase = new CalCulateCaloriesUseCase_1.CalculateCaloriesUseCase(mealRepository);
     const getMealsByDateRangeUseCase = new GetMealsByDateRangeUseCase_1.GetMealsByDateRangeUseCase(mealRepository, ingredientRepository);
-    const mealController = new MealControllers_1.MealController(createMealUseCase, getMealsUseCase, getMealByIdUseCase, updateMealUseCase, deleteMealUseCase, calculateCaloriesUseCase, getMealsByDateRangeUseCase);
+    const getRandomMealUseCase = new GetRandomMealUseCase_1.GetRandomMealUseCase(mealRepository, ingredientRepository);
+    const mealController = new MealControllers_1.MealController(createMealUseCase, getMealsUseCase, getMealByIdUseCase, updateMealUseCase, deleteMealUseCase, calculateCaloriesUseCase, getMealsByDateRangeUseCase, getRandomMealUseCase);
     return {
         mealController,
         mealRepository,
@@ -33,5 +35,6 @@ function createMealDependencies(options) {
         deleteMealUseCase,
         calculateCaloriesUseCase,
         getMealsByDateRangeUseCase,
+        getRandomMealUseCase,
     };
 }

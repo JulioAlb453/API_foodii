@@ -7,6 +7,7 @@ export class User implements IUser {
     public password: string,
     public createdAt: Date,
     public updatedAt: Date,
+    public fcmToken?: string | null,
   ) {}
 
   static create(data: IUser) {
@@ -16,6 +17,7 @@ export class User implements IUser {
       data.password,
       data.createdAt,
       data.updatedAt,
+      data.fcmToken ?? null,
     );
   }
 }

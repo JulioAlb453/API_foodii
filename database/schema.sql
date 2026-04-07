@@ -12,10 +12,12 @@ CREATE TABLE IF NOT EXISTS users (
   id          VARCHAR(36)  NOT NULL,
   username    VARCHAR(100) NOT NULL,
   password    VARCHAR(255) NOT NULL,
+  fcm_token   VARCHAR(500)  NULL COMMENT 'FCM push; un token solo puede estar asignado a un usuario',
   created_at  DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at  DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   PRIMARY KEY (id),
-  UNIQUE KEY uk_users_username (username)
+  UNIQUE KEY uk_users_username (username),
+  KEY idx_users_fcm_token (fcm_token(191))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ---------------------------------------------

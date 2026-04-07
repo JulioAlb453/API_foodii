@@ -43,6 +43,7 @@ export class RegisterUserUseCase {
       id: randomUUID(),
       username: cleanUsername,
       password: hashedPassword,
+      fcmToken: null,
       createdAt: now,
       updatedAt: now,
     });

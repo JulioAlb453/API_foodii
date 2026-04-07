@@ -38,6 +38,7 @@ class UpdateProfileUseCase {
             id: currentUser.id,
             username: normalizedUsername,
             password: currentUser.password,
+            fcmToken: currentUser.fcmToken ?? null,
             createdAt: currentUser.createdAt,
             updatedAt: new Date(),
         });

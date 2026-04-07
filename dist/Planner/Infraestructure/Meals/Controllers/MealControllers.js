@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MealController = void 0;
 class MealController {
-    constructor(createMealUseCase, getMealsUseCase, getMealByIdUseCase, updateMealUseCase, deleteMealUseCase, calculateCaloriesUseCase, getMealsByDateRangeUseCase) {
+    constructor(createMealUseCase, getMealsUseCase, getMealByIdUseCase, updateMealUseCase, deleteMealUseCase, calculateCaloriesUseCase, getMealsByDateRangeUseCase, getRandomMealUseCase) {
         this.createMealUseCase = createMealUseCase;
         this.getMealsUseCase = getMealsUseCase;
         this.getMealByIdUseCase = getMealByIdUseCase;
@@ -10,6 +10,7 @@ class MealController {
         this.deleteMealUseCase = deleteMealUseCase;
         this.calculateCaloriesUseCase = calculateCaloriesUseCase;
         this.getMealsByDateRangeUseCase = getMealsByDateRangeUseCase;
+        this.getRandomMealUseCase = getRandomMealUseCase;
     }
     async create(req, res) {
         try {
@@ -140,6 +141,23 @@ class MealController {
             res.status(200).json({
                 success: true,
                 data: { deleted: result },
+            });
+        }
+        catch (error) {
+            const statusCode = error.statusCode || 500;
+            res.status(statusCode).json({
+                success: false,
+                error: error.message,
+            });
+        }
+    }
+    async getRandom(req, res) {
+        try {
+            const userId = req.user.id;
+            const result = await this.getRandomMealUseCase.execute(userId);
+            res.status(200).json({
+                success: true,
+                data: result,
             });
         }
         catch (error) {

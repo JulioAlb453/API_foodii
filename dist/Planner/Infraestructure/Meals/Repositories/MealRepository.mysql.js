@@ -118,6 +118,15 @@ class MealRepositoryMySQL {
         }
         return mealRows.map((row) => rowToMeal(row, byMealId.get(row.id) ?? []));
     }
+    async getRandomMeal(userId) {
+        const [mealRows] = await this.pool.execute(`SELECT id, name, date, meal_time, created_by, created_at, total_calories, image
+       FROM meals WHERE created_by = ? ORDER BY RAND() LIMIT 1`, [userId]);
+        const list = (Array.isArray(mealRows) ? mealRows : []);
+        if (list.length === 0)
+            return null;
+        const meals = await this.hydrateMeals(list);
+        return meals[0];
+    }
     async delete(id, userId) {
         const [result] = await this.pool.execute("DELETE FROM meals WHERE id = ? AND created_by = ?", [id, userId]);
         const affected = result.affectedRows ?? 0;
