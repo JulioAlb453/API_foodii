@@ -8,8 +8,30 @@ interface UserRow {
   username: string;
   password: string;
   fcm_token: string | null;
+  notification_category_preferences: unknown;
   created_at: Date;
   updated_at: Date;
+}
+
+function parseNotificationCategoryPreferences(raw: unknown): string[] | null {
+  if (raw == null) return null;
+  if (Array.isArray(raw)) {
+    return raw.map((x) => String(x)).filter((s) => s.length > 0);
+  }
+  if (Buffer.isBuffer(raw)) {
+    raw = raw.toString("utf8");
+  }
+  if (typeof raw === "string") {
+    try {
+      const p = JSON.parse(raw);
+      return Array.isArray(p)
+        ? p.map((x) => String(x)).filter((s) => s.length > 0)
+        : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 function rowToUser(row: UserRow): User {
@@ -18,6 +40,9 @@ function rowToUser(row: UserRow): User {
     username: row.username,
     password: row.password,
     fcmToken: row.fcm_token ?? null,
+    notificationCategoryPreferences: parseNotificationCategoryPreferences(
+      row.notification_category_preferences
+    ),
     createdAt: row.created_at instanceof Date ? row.created_at : new Date(row.created_at),
     updatedAt: row.updated_at instanceof Date ? row.updated_at : new Date(row.updated_at),
   });
@@ -31,19 +56,27 @@ export class UserRepositoryMySQL implements UserRepository {
   }
 
   async create(user: User): Promise<User> {
+    const prefsJson =
+      user.notificationCategoryPreferences != null &&
+      user.notificationCategoryPreferences.length > 0
+        ? JSON.stringify(user.notificationCategoryPreferences)
+        : null;
+
     await this.pool.execute(
-      `INSERT INTO users (id, username, password, fcm_token, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?)
+      `INSERT INTO users (id, username, password, fcm_token, notification_category_preferences, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE
          username = VALUES(username),
          password = VALUES(password),
          fcm_token = VALUES(fcm_token),
+         notification_category_preferences = VALUES(notification_category_preferences),
          updated_at = VALUES(updated_at)`,
       [
         user.id,
         user.username,
         user.password,
         user.fcmToken ?? null,
+        prefsJson,
         user.createdAt,
         user.updatedAt,
       ]
@@ -53,7 +86,7 @@ export class UserRepositoryMySQL implements UserRepository {
 
   async findById(id: string): Promise<User | null> {
     const [rows] = await this.pool.execute(
-      "SELECT id, username, password, fcm_token, created_at, updated_at FROM users WHERE id = ?",
+      "SELECT id, username, password, fcm_token, notification_category_preferences, created_at, updated_at FROM users WHERE id = ?",
       [id]
     );
     const row = (Array.isArray(rows) ? rows[0] : (rows as any)?.[0]) as UserRow | undefined;
@@ -64,7 +97,7 @@ export class UserRepositoryMySQL implements UserRepository {
   async findByUsername(username: string): Promise<User | null> {
     const normalized = username.toLowerCase().trim();
     const [rows] = await this.pool.execute(
-      "SELECT id, username, password, fcm_token, created_at, updated_at FROM users WHERE LOWER(TRIM(username)) = ?",
+      "SELECT id, username, password, fcm_token, notification_category_preferences, created_at, updated_at FROM users WHERE LOWER(TRIM(username)) = ?",
       [normalized]
     );
     const row = (Array.isArray(rows) ? rows[0] : (rows as any)?.[0]) as UserRow | undefined;

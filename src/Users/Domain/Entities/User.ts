@@ -8,6 +8,7 @@ export class User implements IUser {
     public createdAt: Date,
     public updatedAt: Date,
     public fcmToken?: string | null,
+    public notificationCategoryPreferences?: string[] | null,
   ) {}
 
   static create(data: IUser) {
@@ -18,6 +19,7 @@ export class User implements IUser {
       data.createdAt,
       data.updatedAt,
       data.fcmToken ?? null,
+      data.notificationCategoryPreferences ?? null,
     );
   }
 }

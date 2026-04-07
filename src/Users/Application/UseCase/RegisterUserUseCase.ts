@@ -8,6 +8,7 @@ import { TokenService } from "src/Core/Application/Ports/TokenService.interface"
 export interface RegisterUserRequest {
   username: string;
   password: string;
+  notificationCategoryPreferences?: string[] | null;
 }
 
 export interface RegisterUserResponse {
@@ -15,6 +16,7 @@ export interface RegisterUserResponse {
     id: string;
     username: string;
     createdAt: Date;
+    notificationCategoryPreferences: string[] | null;
   };
   token: string;
   tokenExpiresIn: string;
@@ -28,13 +30,17 @@ export class RegisterUserUseCase {
   ) {}
 
   async execute(request: RegisterUserRequest): Promise<RegisterUserResponse> {
-    const { username, password } = request;
+    const { username, password, notificationCategoryPreferences } = request;
 
     this.validateInput(username, password);
 
     const cleanUsername = username.toLowerCase().trim();
 
     await this.ensureUsernameNotTaken(cleanUsername);
+
+    const prefs = this.normalizeNotificationCategoryPreferences(
+      notificationCategoryPreferences
+    );
 
     const hashedPassword = await this.hashService.hash(password);
     const now = new Date();
@@ -44,6 +50,7 @@ export class RegisterUserUseCase {
       username: cleanUsername,
       password: hashedPassword,
       fcmToken: null,
+      notificationCategoryPreferences: prefs,
       createdAt: now,
       updatedAt: now,
     });
@@ -59,10 +66,46 @@ export class RegisterUserUseCase {
         id: savedUser.id,
         username: savedUser.username,
         createdAt: savedUser.createdAt,
+        notificationCategoryPreferences:
+          savedUser.notificationCategoryPreferences ?? null,
       },
       token,
       tokenExpiresIn: "7d",
     };
+  }
+
+  private normalizeNotificationCategoryPreferences(
+    raw: unknown
+  ): string[] | null {
+    if (raw === null || raw === undefined) {
+      return null;
+    }
+    if (!Array.isArray(raw)) {
+      throw new AppError(
+        "notificationCategoryPreferences debe ser un array de strings",
+        400
+      );
+    }
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const item of raw) {
+      if (typeof item !== "string") {
+        throw new AppError(
+          "Cada categoría en notificationCategoryPreferences debe ser texto",
+          400
+        );
+      }
+      const s = item.trim().toLowerCase();
+      if (s.length === 0) continue;
+      if (s.length > 64) {
+        throw new AppError("Cada categoría no puede superar 64 caracteres", 400);
+      }
+      if (!seen.has(s)) {
+        seen.add(s);
+        out.push(s);
+      }
+    }
+    return out.length > 0 ? out : null;
   }
 
   private validateInput(username: string, password: string): void {

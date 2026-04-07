@@ -16,14 +16,11 @@ export class AuthController {
     private verifyTokenUseCase: VerifyTokenUseCase
   ) {}
 
-  /**
-   * Registrar un nuevo usuario
-   */
+
   async register(req: Request, res: Response): Promise<void> {
     try {
-      const { username, password } = req.body;
+      const { username, password, notificationCategoryPreferences } = req.body;
 
-      // Validaciones básicas
       if (!username || !password) {
         res.status(400).json({
           success: false,
@@ -32,7 +29,6 @@ export class AuthController {
         return;
       }
 
-      // Validar longitud mínima
       if (username.trim().length < 3) {
         res.status(400).json({
           success: false,
@@ -51,7 +47,12 @@ export class AuthController {
 
       const result = await this.registerUserUseCase.execute({
         username,
-        password
+        password,
+        notificationCategoryPreferences:
+          notificationCategoryPreferences === null ||
+          notificationCategoryPreferences === undefined
+            ? undefined
+            : notificationCategoryPreferences,
       });
 
       res.status(201).json({

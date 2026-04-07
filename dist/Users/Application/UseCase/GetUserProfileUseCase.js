@@ -44,6 +44,7 @@ class GetUserProfileUseCase {
             id: user.id,
             username: user.username,
             createdAt: user.createdAt,
+            notificationCategoryPreferences: user.notificationCategoryPreferences ?? null,
             accountInfo: {
                 daysSinceCreation,
                 isRecentAccount: daysSinceCreation < 30 // Menos de 30 días

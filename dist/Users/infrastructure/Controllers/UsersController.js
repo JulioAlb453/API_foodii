@@ -15,7 +15,7 @@ class AuthController {
      */
     async register(req, res) {
         try {
-            const { username, password } = req.body;
+            const { username, password, notificationCategoryPreferences } = req.body;
             // Validaciones básicas
             if (!username || !password) {
                 res.status(400).json({
@@ -41,7 +41,11 @@ class AuthController {
             }
             const result = await this.registerUserUseCase.execute({
                 username,
-                password
+                password,
+                notificationCategoryPreferences: notificationCategoryPreferences === null ||
+                    notificationCategoryPreferences === undefined
+                    ? undefined
+                    : notificationCategoryPreferences,
             });
             res.status(201).json({
                 success: true,
@@ -232,11 +236,8 @@ class AuthController {
                 });
                 return;
             }
-            // Primero verificar la contraseña intentando hacer login
             try {
-                // Obtener el username del perfil
                 const profile = await this.getUserProfileUseCase.execute({ userId });
-                // Intentar login para verificar contraseña
                 await this.loginUserUseCase.execute({
                     username: profile.username,
                     password,
@@ -249,10 +250,9 @@ class AuthController {
                 });
                 return;
             }
-            // Si la contraseña es correcta, eliminar cuenta
             const result = await this.deleteAccountUseCase.execute({
                 userId,
-                password // Se pasa aunque el caso de uso pueda no usarlo
+                password
             });
             res.status(200).json({
                 success: true,
@@ -268,13 +268,8 @@ class AuthController {
             });
         }
     }
-    /**
-     * Logout (solo en frontend, pero podemos invalidar token si usamos blacklist)
-     */
     async logout(req, res) {
         try {
-            // En una implementación real con blacklist de tokens
-            // invalidaríamos el token aquí
             res.status(200).json({
                 success: true,
                 message: 'Logout exitoso',
@@ -291,9 +286,6 @@ class AuthController {
             });
         }
     }
-    /**
-     * Health check de autenticación
-     */
     async authHealth(req, res) {
         try {
             res.status(200).json({

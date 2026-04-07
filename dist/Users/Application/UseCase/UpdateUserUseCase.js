@@ -39,6 +39,7 @@ class UpdateProfileUseCase {
             username: normalizedUsername,
             password: currentUser.password,
             fcmToken: currentUser.fcmToken ?? null,
+            notificationCategoryPreferences: currentUser.notificationCategoryPreferences ?? null,
             createdAt: currentUser.createdAt,
             updatedAt: new Date(),
         });
