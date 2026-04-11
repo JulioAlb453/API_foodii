@@ -7,7 +7,7 @@ export class DishController {
   async create(req: Request, res: Response): Promise<void> {
     try {
       const { name, description, calories } = req.body;
-      const userId = (req as any).user?.userId;
+      const userId = (req as any).user?.id;
       // @ts-ignore
       const image = req.file ? `/uploads/${req.file.filename}` : null;
 
@@ -31,7 +31,7 @@ export class DishController {
 
   async getAll(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user?.userId;
+      const userId = (req as any).user?.id;
       if (!userId) {
         res.status(401).json({ error: "Unauthorized" });
         return;
@@ -45,7 +45,7 @@ export class DishController {
 
   async getRandom(req: Request, res: Response): Promise<void> {
     try {
-      const userId = (req as any).user?.userId;
+      const userId = (req as any).user?.id;
       if (!userId) {
         res.status(401).json({ error: "Unauthorized" });
         return;
@@ -64,7 +64,7 @@ export class DishController {
   async getById(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const userId = (req as any).user?.userId;
+      const userId = (req as any).user?.id;
       const dish = await this.dishService.getDishById(id as string);
       
       if (!dish || dish.createdBy !== userId) {
@@ -81,7 +81,7 @@ export class DishController {
   async update(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const userId = (req as any).user?.userId;
+      const userId = (req as any).user?.id;
       const { name, description, calories } = req.body;
       // @ts-ignore
       const image = req.file ? `/uploads/${req.file.filename}` : undefined;
@@ -109,7 +109,7 @@ export class DishController {
   async delete(req: Request, res: Response): Promise<void> {
     try {
       const { id } = req.params;
-      const userId = (req as any).user?.userId;
+      const userId = (req as any).user?.id;
       const deleted = await this.dishService.deleteDish(id as string, userId);
       
       if (!deleted) {

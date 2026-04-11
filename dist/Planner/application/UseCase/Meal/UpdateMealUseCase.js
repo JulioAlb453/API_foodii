@@ -11,16 +11,13 @@ class UpdateMealUseCase {
     }
     async execute(request) {
         const { id, userId, name, date, mealTime, ingredients, image } = request;
-        // Buscar la comida existente
         const existingMeal = await this.mealRepository.findById(id);
         if (!existingMeal) {
             throw new AppErrors_1.AppError("Comida no encontrada", 404);
         }
-        // Verificar que la comida pertenece al usuario (Seguimos validando que no edites comidas de otros)
         if (existingMeal.CreatedBy !== userId) {
             throw new AppErrors_1.AppError("No tienes permiso para actualizar esta comida", 403);
         }
-        // Preparar datos actualizados
         const updatedName = name?.trim() || existingMeal.name;
         const updatedDate = date ? new Date(date) : existingMeal.date;
         const updatedMealTime = mealTime || existingMeal.mealTime;
@@ -29,7 +26,6 @@ class UpdateMealUseCase {
         const updatedSteps = request.steps !== undefined
             ? (0, normalizeMealSteps_1.normalizeMealSteps)(request.steps)
             : existingMeal.steps;
-        // Validaciones básicas
         if (updatedName.length < 2) {
             throw new AppErrors_1.AppError("El nombre debe tener al menos 2 caracteres", 400);
         }
@@ -45,13 +41,10 @@ class UpdateMealUseCase {
             if (item.amount <= 0) {
                 throw new AppErrors_1.AppError("La cantidad debe ser mayor que 0", 400);
             }
-            // Buscamos el ingrediente en el repositorio global
             const ingredient = await this.ingredientRepository.findById(item.ingredientId);
             if (!ingredient) {
                 throw new AppErrors_1.AppError(`Ingrediente con ID ${item.ingredientId} no encontrado`, 404);
             }
-            // --- SE ELIMINÓ LA VALIDACIÓN DE PROPIEDAD DEL INGREDIENTE ---
-            // Ahora cualquier usuario puede usar ingredientes creados por otros.
             const calories = (ingredient.caloriesPer100g * item.amount) / 100;
             ingredientDetails.push({
                 ingredientId: item.ingredientId,

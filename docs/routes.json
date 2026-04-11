@@ -1,5 +1,10 @@
 {
   "baseUrl": "/api",
+  "conventions": {
+    "authHeader": "Authorization: Bearer <JWT>",
+    "protectedGroups": "Rutas bajo /api/meals, /api/ingredients y /api/dishes exigen el header salvo que el endpoint indique auth: false.",
+    "multipartMealsDishes": "POST y PUT de meals y dishes pueden usar multipart/form-data con campo de archivo \"image\"; los demás campos suelen ir como strings (JSON stringificado para arrays como ingredients o steps)."
+  },
   "routes": [
     {
       "group": "auth",
@@ -8,19 +13,19 @@
           "method": "POST",
           "path": "/api/auth/register",
           "auth": false,
-          "description": "Registrar nuevo usuario (username, password). Devuelve user + token."
+          "description": "Registrar usuario (username, password). Respuesta: user + token."
         },
         {
           "method": "POST",
           "path": "/api/auth/login",
           "auth": false,
-          "description": "Iniciar sesión. Devuelve user + token."
+          "description": "Login (username, password). Respuesta: user + token."
         },
         {
           "method": "POST",
           "path": "/api/auth/verify-token",
           "auth": false,
-          "description": "Verificar token enviado en body: { \"token\": \"...\" }."
+          "description": "Verificar JWT enviado en el body: { \"token\": \"...\" }."
         },
         {
           "method": "GET",
@@ -32,19 +37,19 @@
           "method": "GET",
           "path": "/api/auth/profile",
           "auth": true,
-          "description": "Obtener perfil del usuario autenticado (Bearer token)."
+          "description": "Perfil del usuario autenticado."
         },
         {
           "method": "PUT",
           "path": "/api/auth/profile",
           "auth": true,
-          "description": "Actualizar perfil (username)."
+          "description": "Actualizar username del perfil."
         },
         {
           "method": "GET",
           "path": "/api/auth/verify-token",
           "auth": true,
-          "description": "Verificar token del header Authorization."
+          "description": "Verificar el JWT enviado en el header Authorization (Bearer)."
         },
         {
           "method": "DELETE",
@@ -56,7 +61,7 @@
           "method": "POST",
           "path": "/api/auth/logout",
           "auth": true,
-          "description": "Cerrar sesión."
+          "description": "Logout (sin invalidación de token en servidor)."
         }
       ]
     },
@@ -66,44 +71,50 @@
         {
           "method": "POST",
           "path": "/api/meals",
-          "auth": false,
-          "description": "Crear comida. Body: name, date, mealTime, ingredients[]."
+          "auth": true,
+          "description": "Crear comida. Body: userId, name, date, mealTime, ingredients[]; opcional steps[] (pasos de preparación) e imagen (campo multipart \"image\"). Ver crud-schemas.json."
         },
         {
           "method": "GET",
           "path": "/api/meals",
-          "auth": false,
-          "description": "Listar todas las comidas (catálogo compartido). Query opcional: date."
+          "auth": true,
+          "description": "Listar comidas. Query opcional: date (YYYY-MM-DD). Respuestas incluyen ingredients, steps e image."
         },
         {
           "method": "GET",
           "path": "/api/meals/calories-summary",
-          "auth": false,
-          "description": "Resumen de calorías. Query: date."
+          "auth": true,
+          "description": "Resumen de calorías del usuario autenticado. Query: date (YYYY-MM-DD, opcional)."
         },
         {
           "method": "GET",
           "path": "/api/meals/date-range",
-          "auth": false,
-          "description": "Comidas por rango de fechas. Query: startDate, endDate."
+          "auth": true,
+          "description": "Comidas del usuario en rango. Query obligatoria: startDate, endDate (YYYY-MM-DD)."
+        },
+        {
+          "method": "GET",
+          "path": "/api/meals/random",
+          "auth": true,
+          "description": "Una comida aleatoria del usuario autenticado."
         },
         {
           "method": "GET",
           "path": "/api/meals/:id",
-          "auth": false,
-          "description": "Obtener una comida por id."
+          "auth": true,
+          "description": "Detalle de una comida por id (acceso acotado al dueño en la lógica de negocio)."
         },
         {
           "method": "PUT",
           "path": "/api/meals/:id",
-          "auth": false,
-          "description": "Actualizar comida (solo el creador)."
+          "auth": true,
+          "description": "Actualizar comida. Body: userId y campos a cambiar; opcional steps (si se envía la clave, reemplaza la lista; [] borra pasos). Imagen opcional (multipart \"image\")."
         },
         {
           "method": "DELETE",
           "path": "/api/meals/:id",
-          "auth": false,
-          "description": "Eliminar comida (solo el creador)."
+          "auth": true,
+          "description": "Eliminar comida. Body: { \"userId\": \"uuid\" }."
         }
       ]
     },
@@ -113,50 +124,102 @@
         {
           "method": "POST",
           "path": "/api/ingredients",
-          "auth": false,
-          "description": "Crear ingrediente. Body: name, caloriesPer100g."
+          "auth": true,
+          "description": "Crear ingrediente (name, caloriesPer100g). createdBy = usuario del token."
         },
         {
           "method": "GET",
           "path": "/api/ingredients",
-          "auth": false,
-          "description": "Listar todos los ingredientes (catálogo compartido). Query opcional: search."
+          "auth": true,
+          "description": "Listar ingredientes del usuario. Query opcional: search."
         },
         {
           "method": "GET",
           "path": "/api/ingredients/search",
-          "auth": false,
-          "description": "Buscar ingredientes. Query: q, limit (opcional)."
+          "auth": true,
+          "description": "Búsqueda de ingredientes. Query: q, limit (opcional)."
         },
         {
           "method": "POST",
           "path": "/api/ingredients/calculate-calories",
-          "auth": false,
-          "description": "Calcular calorías. Body: ingredientId, amount."
+          "auth": true,
+          "description": "Calcular calorías para un ingrediente y cantidad (ingredientId, amount en gramos)."
         },
         {
           "method": "POST",
           "path": "/api/ingredients/calculate-bulk-calories",
-          "auth": false,
-          "description": "Calcular calorías en lote. Body: ingredients[] (ingredientId, amount)."
+          "auth": true,
+          "description": "Calcular calorías en lote (body: ingredients[] con ingredientId y amount)."
         },
         {
           "method": "GET",
           "path": "/api/ingredients/:id",
-          "auth": false,
+          "auth": true,
           "description": "Obtener ingrediente por id."
         },
         {
           "method": "PUT",
           "path": "/api/ingredients/:id",
-          "auth": false,
+          "auth": true,
           "description": "Actualizar ingrediente."
         },
         {
           "method": "DELETE",
           "path": "/api/ingredients/:id",
-          "auth": false,
+          "auth": true,
           "description": "Eliminar ingrediente."
+        }
+      ]
+    },
+    {
+      "group": "dishes",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/dishes",
+          "auth": true,
+          "description": "Crear platillo (name, calories obligatorios; description opcional). Imagen opcional: multipart \"image\". Respuesta: objeto platillo (sin envoltorio success/data)."
+        },
+        {
+          "method": "GET",
+          "path": "/api/dishes",
+          "auth": true,
+          "description": "Listar platillos del usuario autenticado. Respuesta: array de platillos."
+        },
+        {
+          "method": "GET",
+          "path": "/api/dishes/random",
+          "auth": true,
+          "description": "Un platillo aleatorio del usuario."
+        },
+        {
+          "method": "GET",
+          "path": "/api/dishes/:id",
+          "auth": true,
+          "description": "Obtener platillo por id (solo si pertenece al usuario)."
+        },
+        {
+          "method": "PUT",
+          "path": "/api/dishes/:id",
+          "auth": true,
+          "description": "Actualizar platillo (campos opcionales + imagen multipart opcional)."
+        },
+        {
+          "method": "DELETE",
+          "path": "/api/dishes/:id",
+          "auth": true,
+          "description": "Eliminar platillo del usuario."
+        }
+      ]
+    },
+    {
+      "group": "static",
+      "endpoints": [
+        {
+          "method": "GET",
+          "path": "/uploads/:filename",
+          "auth": false,
+          "description": "Archivos subidos por la API (rutas guardadas en meal.image / dish.image como /uploads/<nombre>). No requiere JWT."
         }
       ]
     }

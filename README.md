@@ -60,6 +60,10 @@ src/
 │
 └── shared/
     └── Errors/AppErrors.ts   # Clase de error con statusCode (AppError)
+
+docs/
+├── routes.json              # Listado de rutas (método, path, auth, descripción)
+└── crud-schemas.json        # Esquemas de body/query y ejemplos de respuesta
 ```
 
 ### Resumen por capa
@@ -166,6 +170,8 @@ Desde el cliente MySQL: `source /ruta/al/proyecto/database/schema.sql`
 
 ## Endpoints
 
+Listado actualizado en máquina-legible: [`docs/routes.json`](docs/routes.json). Esquemas de cuerpos y ejemplos: [`docs/crud-schemas.json`](docs/crud-schemas.json).
+
 ### Auth (`/api/auth`)
 
 | Método | Ruta | Auth | Descripción |
@@ -184,26 +190,48 @@ Desde el cliente MySQL: `source /ruta/al/proyecto/database/schema.sql`
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/meals` | Crear comida (name, date, mealTime, ingredients). |
-| GET | `/api/meals` | Listar comidas (query opcional: `date`). |
-| GET | `/api/meals/calories-summary` | Resumen de calorías (query: `date`). |
-| GET | `/api/meals/date-range` | Comidas en rango (query: `startDate`, `endDate`). |
-| GET | `/api/meals/:id` | Obtener una comida por id. |
-| PUT | `/api/meals/:id` | Actualizar comida. |
-| DELETE | `/api/meals/:id` | Eliminar comida. |
+| POST | `/api/meals` | Crear comida (`userId`, name, date, mealTime, ingredients). Opcional: `steps` (pasos de preparación). Imagen opcional: multipart campo `image`. |
+| GET | `/api/meals` | Listar comidas (query opcional: `date`). Respuesta incluye `steps` e `image`. |
+| GET | `/api/meals/calories-summary` | Resumen de calorías del usuario (query: `date` opcional). |
+| GET | `/api/meals/date-range` | Comidas del usuario en rango (query: `startDate`, `endDate`). |
+| GET | `/api/meals/random` | Una comida aleatoria del usuario. |
+| GET | `/api/meals/:id` | Detalle de una comida. |
+| PUT | `/api/meals/:id` | Actualizar comida (`userId` + campos). Si envías la clave `steps`, reemplaza la lista (`[]` la vacía). Imagen opcional: multipart `image`. |
+| DELETE | `/api/meals/:id` | Eliminar comida (body: `userId`). |
 
 ### Ingredients (`/api/ingredients`) — todas con Bearer token
+
+El `createdBy` del ingrediente se toma del usuario del token.
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
 | POST | `/api/ingredients` | Crear ingrediente (name, caloriesPer100g). |
-| GET | `/api/ingredients` | Listar ingredientes (query opcional: `search`). |
+| GET | `/api/ingredients` | Listar ingredientes del usuario (query opcional: `search`). |
 | GET | `/api/ingredients/search` | Buscar (query: `q`, opcional `limit`). |
 | POST | `/api/ingredients/calculate-calories` | Calcular calorías (body: ingredientId, amount). |
 | POST | `/api/ingredients/calculate-bulk-calories` | Calcular calorías en lote (body: ingredients[]). |
 | GET | `/api/ingredients/:id` | Obtener ingrediente por id. |
 | PUT | `/api/ingredients/:id` | Actualizar ingrediente. |
 | DELETE | `/api/ingredients/:id` | Eliminar ingrediente. |
+
+### Dishes (`/api/dishes`) — todas con Bearer token
+
+Las respuestas de este módulo devuelven JSON **sin** el envoltorio `{ success, data }` (objeto o array directo).
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/dishes` | Crear platillo (name, calories; description opcional; imagen opcional multipart `image`). |
+| GET | `/api/dishes` | Listar platillos del usuario. |
+| GET | `/api/dishes/random` | Un platillo aleatorio del usuario. |
+| GET | `/api/dishes/:id` | Obtener platillo por id (solo del usuario). |
+| PUT | `/api/dishes/:id` | Actualizar platillo (campos opcionales + imagen opcional). |
+| DELETE | `/api/dishes/:id` | Eliminar platillo. |
+
+### Archivos estáticos
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| GET | `/uploads/...` | Archivos generados al subir `image` en comidas o platillos (ruta relativa guardada en BD). |
 
 ---
 
@@ -249,15 +277,19 @@ curl -X POST http://localhost:3000/api/ingredients \
 
 ### Crear comida
 
+Incluye `userId` (mismo id que devuelve el login). Opcional: `steps` (lista de textos de preparación).
+
 ```bash
 curl -X POST http://localhost:3000/api/meals \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TOKEN" \
   -d '{
+    "userId":"<id-usuario>",
     "name":"Almuerzo",
-    "date":"2025-02-05",
+    "date":"2026-04-10",
     "mealTime":"lunch",
-    "ingredients":[{"ingredientId":"<id-ingrediente>","amount":150}]
+    "ingredients":[{"ingredientId":"<id-ingrediente>","amount":150}],
+    "steps":["Cocinar el arroz","Mezclar con el resto de ingredientes"]
   }'
 ```
 
