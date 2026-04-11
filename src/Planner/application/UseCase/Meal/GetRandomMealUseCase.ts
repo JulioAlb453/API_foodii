@@ -9,12 +9,18 @@ interface MealIngredientResponse {
   calories: number;
 }
 
+interface MealStepResponse {
+  stepOrder: number;
+  description: string;
+}
+
 interface GetRandomMealResponse {
   id: string;
   name: string;
   date: Date;
   mealTime: string;
   ingredients: MealIngredientResponse[];
+  steps: MealStepResponse[];
   totalCalories: number;
   createdAt: Date;
   image?: string | null;
@@ -58,6 +64,10 @@ export class GetRandomMealUseCase {
       date: meal.date,
       mealTime: meal.mealTime,
       ingredients: ingredientsDetails,
+      steps: meal.steps.map((s) => ({
+        stepOrder: s.stepOrder,
+        description: s.description,
+      })),
       totalCalories: meal.totalCalories,
       createdAt: meal.createdAt,
       image: meal.image,

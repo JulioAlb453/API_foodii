@@ -3,6 +3,7 @@ import { Meal } from "src/Planner/Domain/Entities/Meal";
 import { MealRepository } from "src/Planner/Domain/interfaces/MealRepository";
 import { getPool } from "src/Core/Infraestructure/Database/connection";
 import { IMealIngredient } from "src/Planner/Domain/interfaces/IMealIngredient";
+import { IMealStep } from "src/Planner/Domain/interfaces/IMealStep";
 
 interface MealRow {
   id: string;
@@ -20,13 +21,24 @@ interface MealIngredientRow {
   amount: number;
 }
 
-function rowToMeal(row: MealRow, ingredients: IMealIngredient[]): Meal {
+interface MealStepRow {
+  meal_id: string;
+  step_order: number;
+  description: string;
+}
+
+function rowToMeal(
+  row: MealRow,
+  ingredients: IMealIngredient[],
+  steps: IMealStep[],
+): Meal {
   return Meal.create({
     id: row.id,
     name: row.name,
     date: row.date instanceof Date ? row.date : new Date(row.date),
     mealTime: row.meal_time,
     ingredients,
+    steps,
     CreatedBy: row.created_by,
     createdAt: row.created_at instanceof Date ? row.created_at : new Date(row.created_at),
     totalCalories: Number(row.total_calories),
@@ -76,6 +88,14 @@ export class MealRepositoryMySQL implements MealRepository {
         );
       }
 
+      await conn.execute("DELETE FROM meal_steps WHERE meal_id = ?", [meal.id]);
+      for (const s of meal.steps) {
+        await conn.execute(
+          "INSERT INTO meal_steps (meal_id, step_order, description) VALUES (?, ?, ?)",
+          [meal.id, s.stepOrder, s.description],
+        );
+      }
+
       return meal;
     } finally {
       conn.release();
@@ -100,7 +120,15 @@ export class MealRepositoryMySQL implements MealRepository {
       amount: Number(r.amount),
     }));
 
-    return rowToMeal(mealRow, ingredients);
+    const [stepRows] = await this.pool.execute(
+      "SELECT meal_id, step_order, description FROM meal_steps WHERE meal_id = ? ORDER BY step_order",
+      [id],
+    );
+    const steps = this.rowsToSteps(
+      (Array.isArray(stepRows) ? stepRows : []) as MealStepRow[],
+    );
+
+    return rowToMeal(mealRow, ingredients, steps);
   }
 
   async findAll(): Promise<Meal[]> {
@@ -179,9 +207,30 @@ export class MealRepositoryMySQL implements MealRepository {
       });
     }
 
-    return mealRows.map((row) =>
-      rowToMeal(row, byMealId.get(row.id) ?? [])
+    const [allStepRows] = await this.pool.execute(
+      `SELECT meal_id, step_order, description FROM meal_steps WHERE meal_id IN (${placeholders}) ORDER BY meal_id, step_order`,
+      ids,
     );
+    const stepList = (Array.isArray(allStepRows) ? allStepRows : []) as MealStepRow[];
+    const stepsByMealId = new Map<string, IMealStep[]>();
+    for (const r of stepList) {
+      if (!stepsByMealId.has(r.meal_id)) stepsByMealId.set(r.meal_id, []);
+      stepsByMealId.get(r.meal_id)!.push({
+        stepOrder: Number(r.step_order),
+        description: r.description,
+      });
+    }
+
+    return mealRows.map((row) =>
+      rowToMeal(row, byMealId.get(row.id) ?? [], stepsByMealId.get(row.id) ?? [])
+    );
+  }
+
+  private rowsToSteps(rows: MealStepRow[]): IMealStep[] {
+    return rows.map((r) => ({
+      stepOrder: Number(r.step_order),
+      description: r.description,
+    }));
   }
 
   async getRandomMeal(userId: string): Promise<Meal | null> {

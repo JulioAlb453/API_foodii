@@ -32,8 +32,13 @@ class GetMealByIdUseCase {
             date: meal.date,
             mealTime: meal.mealTime,
             ingredients: ingredientsDetails,
+            steps: meal.steps.map((s) => ({
+                stepOrder: s.stepOrder,
+                description: s.description,
+            })),
             totalCalories: meal.totalCalories,
             createdAt: meal.createdAt,
+            image: meal.image,
         };
     }
 }

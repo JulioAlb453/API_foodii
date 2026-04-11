@@ -10,13 +10,9 @@ class AuthController {
         this.deleteAccountUseCase = deleteAccountUseCase;
         this.verifyTokenUseCase = verifyTokenUseCase;
     }
-    /**
-     * Registrar un nuevo usuario
-     */
     async register(req, res) {
         try {
             const { username, password, notificationCategoryPreferences } = req.body;
-            // Validaciones básicas
             if (!username || !password) {
                 res.status(400).json({
                     success: false,
@@ -24,7 +20,6 @@ class AuthController {
                 });
                 return;
             }
-            // Validar longitud mínima
             if (username.trim().length < 3) {
                 res.status(400).json({
                     success: false,

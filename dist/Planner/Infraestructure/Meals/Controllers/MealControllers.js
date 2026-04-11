@@ -1,6 +1,21 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MealController = void 0;
+function parseStepsFromBody(body) {
+    if (!("steps" in body) || body.steps === undefined || body.steps === "") {
+        return undefined;
+    }
+    const raw = body.steps;
+    if (typeof raw === "string") {
+        try {
+            return JSON.parse(raw);
+        }
+        catch {
+            return raw;
+        }
+    }
+    return raw;
+}
 class MealController {
     constructor(createMealUseCase, getMealsUseCase, getMealByIdUseCase, updateMealUseCase, deleteMealUseCase, calculateCaloriesUseCase, getMealsByDateRangeUseCase, getRandomMealUseCase) {
         this.createMealUseCase = createMealUseCase;
@@ -27,6 +42,7 @@ class MealController {
                 return;
             }
             const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+            const steps = parseStepsFromBody(req.body);
             const result = await this.createMealUseCase.execute({
                 name,
                 date,
@@ -34,6 +50,7 @@ class MealController {
                 ingredients,
                 userId,
                 image,
+                steps,
             });
             res.status(201).json({
                 success: true,
@@ -100,6 +117,8 @@ class MealController {
                 ingredients = JSON.parse(ingredients);
             }
             const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+            const body = req.body;
+            const steps = "steps" in body ? parseStepsFromBody(body) : undefined;
             const result = await this.updateMealUseCase.execute({
                 id: mealId,
                 name,
@@ -108,6 +127,7 @@ class MealController {
                 ingredients,
                 userId,
                 image,
+                ...(steps !== undefined ? { steps } : {}),
             });
             res.status(200).json({
                 success: true,

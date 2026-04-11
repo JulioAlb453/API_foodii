@@ -43,10 +43,6 @@ class RegisterUserUseCase {
             tokenExpiresIn: "7d",
         };
     }
-    /**
-     * Acepta array de strings o ausencia; normaliza a minúsculas y sin duplicados.
-     * null/undefined → null; array vacío → null (nada que notificar).
-     */
     normalizeNotificationCategoryPreferences(raw) {
         if (raw === null || raw === undefined) {
             return null;

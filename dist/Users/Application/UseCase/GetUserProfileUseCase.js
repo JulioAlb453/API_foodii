@@ -47,7 +47,7 @@ class GetUserProfileUseCase {
             notificationCategoryPreferences: user.notificationCategoryPreferences ?? null,
             accountInfo: {
                 daysSinceCreation,
-                isRecentAccount: daysSinceCreation < 30 // Menos de 30 días
+                isRecentAccount: daysSinceCreation < 30
             }
         };
     }
@@ -55,7 +55,7 @@ class GetUserProfileUseCase {
         const now = new Date();
         const created = new Date(createdAt);
         const diffTime = Math.abs(now.getTime() - created.getTime());
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Convertir a días
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     }
 }
 exports.GetUserProfileUseCase = GetUserProfileUseCase;

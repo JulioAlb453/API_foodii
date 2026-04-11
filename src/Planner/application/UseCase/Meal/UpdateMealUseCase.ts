@@ -2,6 +2,7 @@ import { MealRepository } from "../../../Domain/interfaces/MealRepository";
 import { Meal } from "../../../Domain/Entities/Meal";
 import { IngredientRepository } from "../../../Domain/interfaces/IngredientRepository";
 import { AppError } from "src/shared/Errors/AppErrors";
+import { normalizeMealSteps } from "./normalizeMealSteps";
 
 interface UpdateMealRequest {
   id: string;
@@ -14,6 +15,7 @@ interface UpdateMealRequest {
   }>;
   userId: string;
   image?: string | null;
+  steps?: unknown;
 }
 
 interface MealIngredientResponse {
@@ -23,12 +25,18 @@ interface MealIngredientResponse {
   calories: number;
 }
 
+interface MealStepResponse {
+  stepOrder: number;
+  description: string;
+}
+
 interface UpdateMealResponse {
   id: string;
   name: string;
   date: Date;
   mealTime: string;
   ingredients: MealIngredientResponse[];
+  steps: MealStepResponse[];
   totalCalories: number;
   createdAt: Date;
   image?: string | null;
@@ -43,26 +51,26 @@ export class UpdateMealUseCase {
   async execute(request: UpdateMealRequest): Promise<UpdateMealResponse> {
     const { id, userId, name, date, mealTime, ingredients, image } = request;
 
-    // Buscar la comida existente
     const existingMeal = await this.mealRepository.findById(id);
 
     if (!existingMeal) {
       throw new AppError("Comida no encontrada", 404);
     }
 
-    // Verificar que la comida pertenece al usuario (Seguimos validando que no edites comidas de otros)
     if (existingMeal.CreatedBy !== userId) {
       throw new AppError("No tienes permiso para actualizar esta comida", 403);
     }
 
-    // Preparar datos actualizados
     const updatedName = name?.trim() || existingMeal.name;
     const updatedDate = date ? new Date(date) : existingMeal.date;
     const updatedMealTime = mealTime || existingMeal.mealTime;
     const updatedIngredients = ingredients || existingMeal.ingredients;
     const updatedImage = image !== undefined ? image : existingMeal.image;
+    const updatedSteps =
+      request.steps !== undefined
+        ? normalizeMealSteps(request.steps)
+        : existingMeal.steps;
 
-    // Validaciones básicas
     if (updatedName.length < 2) {
       throw new AppError("El nombre debe tener al menos 2 caracteres", 400);
     }
@@ -83,15 +91,12 @@ export class UpdateMealUseCase {
         throw new AppError("La cantidad debe ser mayor que 0", 400);
       }
 
-      // Buscamos el ingrediente en el repositorio global
       const ingredient = await this.ingredientRepository.findById(item.ingredientId);
       
       if (!ingredient) {
         throw new AppError(`Ingrediente con ID ${item.ingredientId} no encontrado`, 404);
       }
 
-      // --- SE ELIMINÓ LA VALIDACIÓN DE PROPIEDAD DEL INGREDIENTE ---
-      // Ahora cualquier usuario puede usar ingredientes creados por otros.
 
       const calories = (ingredient.caloriesPer100g * item.amount) / 100;
 
@@ -111,6 +116,7 @@ export class UpdateMealUseCase {
       date: updatedDate,
       mealTime: updatedMealTime,
       ingredients: updatedIngredients,
+      steps: updatedSteps,
       CreatedBy: userId,
       createdAt: existingMeal.createdAt,
       totalCalories,
@@ -125,6 +131,10 @@ export class UpdateMealUseCase {
       date: updatedMeal.date,
       mealTime: updatedMeal.mealTime,
       ingredients: ingredientDetails,
+      steps: updatedMeal.steps.map((s) => ({
+        stepOrder: s.stepOrder,
+        description: s.description,
+      })),
       totalCalories,
       createdAt: updatedMeal.createdAt,
       image: updatedMeal.image,

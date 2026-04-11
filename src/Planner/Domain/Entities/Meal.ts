@@ -1,5 +1,6 @@
 import { IMeal } from "../interfaces/IMeal";
 import { IMealIngredient } from "../interfaces/IMealIngredient";
+import { IMealStep } from "../interfaces/IMealStep";
 
 export class Meal implements IMeal {
   constructor(
@@ -8,6 +9,7 @@ export class Meal implements IMeal {
     public readonly date: Date,
     public readonly mealTime: string,
     public readonly ingredients: IMealIngredient[],
+    public readonly steps: IMealStep[],
     public readonly CreatedBy: string,
     public readonly createdAt: Date,
     public readonly totalCalories: number,
@@ -21,6 +23,7 @@ export class Meal implements IMeal {
       data.date,
       data.mealTime,
       data.ingredients,
+      data.steps ?? [],
       data.CreatedBy,
       data.createdAt,
       data.totalCalories,

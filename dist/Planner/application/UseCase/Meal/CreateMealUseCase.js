@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateMealUseCase = void 0;
 const Meal_1 = require("src/Planner/Domain/Entities/Meal");
 const AppErrors_1 = require("src/shared/Errors/AppErrors");
+const normalizeMealSteps_1 = require("./normalizeMealSteps");
 class CreateMealUseCase {
     constructor(mealRepository, ingredientRepository) {
         this.mealRepository = mealRepository;
@@ -10,6 +11,7 @@ class CreateMealUseCase {
     }
     async execute(request) {
         const { name, date, mealTime, ingredients, userId, image } = request;
+        const steps = (0, normalizeMealSteps_1.normalizeMealSteps)(request.steps);
         if (!name || name.trim().length < 2) {
             throw new AppErrors_1.AppError("El nombre de la comida debe tener al menos 2 caracteres", 400);
         }
@@ -47,6 +49,7 @@ class CreateMealUseCase {
                 ingredientId: item.ingredientId,
                 amount: item.amount,
             })),
+            steps,
             CreatedBy: userId,
             createdAt: new Date(),
             totalCalories,
@@ -60,6 +63,10 @@ class CreateMealUseCase {
             date: meal.date,
             mealTime: meal.mealTime,
             ingredients: ingredientDetails,
+            steps: meal.steps.map((s) => ({
+                stepOrder: s.stepOrder,
+                description: s.description,
+            })),
             totalCalories,
             createdAt: meal.createdAt,
             image: meal.image,

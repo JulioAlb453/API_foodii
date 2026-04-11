@@ -3,13 +3,14 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MealRepositoryMySQL = void 0;
 const Meal_1 = require("src/Planner/Domain/Entities/Meal");
 const connection_1 = require("src/Core/Infraestructure/Database/connection");
-function rowToMeal(row, ingredients) {
+function rowToMeal(row, ingredients, steps) {
     return Meal_1.Meal.create({
         id: row.id,
         name: row.name,
         date: row.date instanceof Date ? row.date : new Date(row.date),
         mealTime: row.meal_time,
         ingredients,
+        steps,
         CreatedBy: row.created_by,
         createdAt: row.created_at instanceof Date ? row.created_at : new Date(row.created_at),
         totalCalories: Number(row.total_calories),
@@ -46,6 +47,10 @@ class MealRepositoryMySQL {
             for (const ing of meal.ingredients) {
                 await conn.execute("INSERT INTO meal_ingredients (meal_id, ingredient_id, amount) VALUES (?, ?, ?)", [meal.id, ing.ingredientId, ing.amount]);
             }
+            await conn.execute("DELETE FROM meal_steps WHERE meal_id = ?", [meal.id]);
+            for (const s of meal.steps) {
+                await conn.execute("INSERT INTO meal_steps (meal_id, step_order, description) VALUES (?, ?, ?)", [meal.id, s.stepOrder, s.description]);
+            }
             return meal;
         }
         finally {
@@ -63,7 +68,9 @@ class MealRepositoryMySQL {
             ingredientId: r.ingredient_id,
             amount: Number(r.amount),
         }));
-        return rowToMeal(mealRow, ingredients);
+        const [stepRows] = await this.pool.execute("SELECT meal_id, step_order, description FROM meal_steps WHERE meal_id = ? ORDER BY step_order", [id]);
+        const steps = this.rowsToSteps((Array.isArray(stepRows) ? stepRows : []));
+        return rowToMeal(mealRow, ingredients, steps);
     }
     async findAll() {
         const [mealRows] = await this.pool.execute(`SELECT id, name, date, meal_time, created_by, created_at, total_calories, image
@@ -116,7 +123,24 @@ class MealRepositoryMySQL {
                 amount: Number(r.amount),
             });
         }
-        return mealRows.map((row) => rowToMeal(row, byMealId.get(row.id) ?? []));
+        const [allStepRows] = await this.pool.execute(`SELECT meal_id, step_order, description FROM meal_steps WHERE meal_id IN (${placeholders}) ORDER BY meal_id, step_order`, ids);
+        const stepList = (Array.isArray(allStepRows) ? allStepRows : []);
+        const stepsByMealId = new Map();
+        for (const r of stepList) {
+            if (!stepsByMealId.has(r.meal_id))
+                stepsByMealId.set(r.meal_id, []);
+            stepsByMealId.get(r.meal_id).push({
+                stepOrder: Number(r.step_order),
+                description: r.description,
+            });
+        }
+        return mealRows.map((row) => rowToMeal(row, byMealId.get(row.id) ?? [], stepsByMealId.get(row.id) ?? []));
+    }
+    rowsToSteps(rows) {
+        return rows.map((r) => ({
+            stepOrder: Number(r.step_order),
+            description: r.description,
+        }));
     }
     async getRandomMeal(userId) {
         const [mealRows] = await this.pool.execute(`SELECT id, name, date, meal_time, created_by, created_at, total_calories, image

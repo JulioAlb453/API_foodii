@@ -2,6 +2,7 @@ import { Meal } from "src/Planner/Domain/Entities/Meal";
 import { MealRepository } from "src/Planner/Domain/interfaces/MealRepository";
 import { IngredientRepository } from "src/Planner/Domain/interfaces/IngredientRepository";
 import { AppError } from "src/shared/Errors/AppErrors";
+import { normalizeMealSteps } from "./normalizeMealSteps";
 
 interface CreateMealRequest {
   name: string;
@@ -13,6 +14,7 @@ interface CreateMealRequest {
   }>;
   userId: string;
   image?: string | null;
+  steps?: unknown;
 }
 
 interface MealIngredientResponse {
@@ -22,12 +24,18 @@ interface MealIngredientResponse {
   calories: number;
 }
 
+interface MealStepResponse {
+  stepOrder: number;
+  description: string;
+}
+
 interface CreateMealResponse {
   id: string;
   name: string;
   date: Date;
   mealTime: string;
   ingredients: MealIngredientResponse[];
+  steps: MealStepResponse[];
   totalCalories: number;
   createdAt: Date;
   image?: string | null;
@@ -41,6 +49,7 @@ export class CreateMealUseCase {
 
   async execute(request: CreateMealRequest): Promise<CreateMealResponse> {
     const { name, date, mealTime, ingredients, userId, image } = request;
+    const steps = normalizeMealSteps(request.steps);
 
     if (!name || name.trim().length < 2) {
       throw new AppError(
@@ -102,6 +111,7 @@ export class CreateMealUseCase {
         ingredientId: item.ingredientId,
         amount: item.amount,
       })),
+      steps,
       CreatedBy: userId,
       createdAt: new Date(),
       totalCalories,
@@ -117,6 +127,10 @@ export class CreateMealUseCase {
       date: meal.date,
       mealTime: meal.mealTime,
       ingredients: ingredientDetails,
+      steps: meal.steps.map((s) => ({
+        stepOrder: s.stepOrder,
+        description: s.description,
+      })),
       totalCalories,
       createdAt: meal.createdAt,
       image: meal.image,

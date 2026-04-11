@@ -9,6 +9,21 @@ import { GetMealsByDateRangeUseCase } from "src/Planner/application/UseCase/Meal
 import { GetMealsUseCase } from "src/Planner/application/UseCase/Meal/GetMealUseCase";
 import { GetRandomMealUseCase } from "src/Planner/application/UseCase/Meal/GetRandomMealUseCase";
 
+function parseStepsFromBody(body: Record<string, unknown>): unknown {
+  if (!("steps" in body) || body.steps === undefined || body.steps === "") {
+    return undefined;
+  }
+  const raw = body.steps;
+  if (typeof raw === "string") {
+    try {
+      return JSON.parse(raw) as unknown;
+    } catch {
+      return raw;
+    }
+  }
+  return raw;
+}
+
 export class MealController {
   constructor(
     private createMealUseCase: CreateMealUseCase,
@@ -39,6 +54,7 @@ export class MealController {
       }
 
       const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+      const steps = parseStepsFromBody(req.body as Record<string, unknown>);
 
       const result = await this.createMealUseCase.execute({
         name,
@@ -47,6 +63,7 @@ export class MealController {
         ingredients,
         userId,
         image,
+        steps,
       });
 
       res.status(201).json({
@@ -121,6 +138,9 @@ export class MealController {
       }
 
       const image = req.file ? `/uploads/${req.file.filename}` : undefined;
+      const body = req.body as Record<string, unknown>;
+      const steps =
+        "steps" in body ? parseStepsFromBody(body) : undefined;
 
       const result = await this.updateMealUseCase.execute({
         id: mealId,
@@ -130,6 +150,7 @@ export class MealController {
         ingredients,
         userId,
         image,
+        ...(steps !== undefined ? { steps } : {}),
       });
 
       res.status(200).json({
