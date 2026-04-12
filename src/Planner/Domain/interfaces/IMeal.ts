@@ -8,6 +8,8 @@ export interface IMeal {
   mealTime: string;
   ingredients: IMealIngredient[];
   steps: IMealStep[];
+  /** Slugs de categoría (mismo vocabulario que notificaciones / FCM). */
+  categories: string[];
   CreatedBy: string;
   createdAt: Date;
   totalCalories: number;

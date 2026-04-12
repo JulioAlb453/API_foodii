@@ -169,7 +169,8 @@
         "date": "string (YYYY-MM-DD)",
         "mealTime": "breakfast | lunch | dinner | snack",
         "ingredients": [{ "ingredientId": "string (uuid)", "amount": "number (gramos)" }],
-        "steps": "opcional: string[] o { description: string }[]; máx. 50 pasos; orden = orden de la lista"
+        "steps": "opcional: string[] o { description: string }[]; máx. 50 pasos; orden = orden de la lista",
+        "categories": "opcional: string[] (slugs o etiquetas reconocidas; se persisten slugs en meal_categories). Sin clave o [] = sin categorías."
       },
       "multipartFields": {
         "userId": "string",
@@ -178,6 +179,7 @@
         "mealTime": "string",
         "ingredients": "string (JSON array)",
         "steps": "string (JSON array, opcional)",
+        "categories": "string (JSON array de slugs, opcional)",
         "image": "archivo (opcional)"
       },
       "exampleRequest": {
@@ -186,7 +188,8 @@
         "date": "2026-04-10",
         "mealTime": "breakfast",
         "ingredients": [{ "ingredientId": "ing-uuid", "amount": 150 }],
-        "steps": ["Batir huevos", "Cocinar en sartén antiadherente"]
+        "steps": ["Batir huevos", "Cocinar en sartén antiadherente"],
+        "categories": ["fitness", "high_protein"]
       },
       "exampleResponse": {
         "success": true,
@@ -207,6 +210,7 @@
             { "stepOrder": 1, "description": "Batir huevos" },
             { "stepOrder": 2, "description": "Cocinar en sartén antiadherente" }
           ],
+          "categories": ["fitness", "high_protein"],
           "totalCalories": 232.5,
           "createdAt": "2026-04-10T16:22:30.180Z",
           "image": "/uploads/foto.jpg"
@@ -235,6 +239,7 @@
               }
             ],
             "steps": [{ "stepOrder": 1, "description": "..." }],
+            "categories": ["fitness"],
             "totalCalories": 155,
             "createdAt": "2026-04-10T16:22:30.180Z",
             "image": null
@@ -263,6 +268,7 @@
             }
           ],
           "steps": [{ "stepOrder": 1, "description": "Batir huevos" }],
+          "categories": ["fitness"],
           "totalCalories": 155,
           "createdAt": "2026-04-10T16:22:30.180Z",
           "image": null
@@ -280,7 +286,8 @@
         "date": "string (opcional, YYYY-MM-DD)",
         "mealTime": "string (opcional)",
         "ingredients": "array (opcional)",
-        "steps": "opcional: si la clave está presente, reemplaza todos los pasos; [] elimina pasos; si se omite la clave, se conservan los pasos actuales"
+        "steps": "opcional: si la clave está presente, reemplaza todos los pasos; [] elimina pasos; si se omite la clave, se conservan los pasos actuales",
+        "categories": "opcional: si la clave está presente, reemplaza categorías; [] o null vacía; si se omite la clave, se conservan las actuales"
       },
       "exampleRequest": {
         "userId": "user-uuid",
@@ -309,6 +316,7 @@
             { "stepOrder": 1, "description": "Cocinar pollo" },
             { "stepOrder": 2, "description": "Servir con arroz" }
           ],
+          "categories": ["high_protein"],
           "totalCalories": 330,
           "createdAt": "2026-04-10T16:22:30.180Z",
           "image": null
@@ -359,6 +367,7 @@
                 "name": "Desayuno",
                 "date": "2026-04-10T00:00:00.000Z",
                 "mealTime": "breakfast",
+                "categories": ["fitness"],
                 "totalCalories": 450,
                 "createdAt": "2026-04-10T08:00:00.000Z"
               }
@@ -380,6 +389,7 @@
           "mealTime": "breakfast",
           "ingredients": [],
           "steps": [],
+          "categories": [],
           "totalCalories": 300,
           "createdAt": "2026-04-10T16:22:30.180Z",
           "image": null

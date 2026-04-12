@@ -13,6 +13,7 @@ interface MealResponse {
   name: string;
   date: Date;
   mealTime: string;
+  categories: string[];
   totalCalories: number;
   createdAt: Date;
 }
@@ -58,6 +59,7 @@ export class GetMealsByDateRangeUseCase {
         name: meal.name,
         date: meal.date,
         mealTime: meal.mealTime,
+        categories: meal.categories ?? [],
         totalCalories: meal.totalCalories,
         createdAt: meal.createdAt,
       });

@@ -5,6 +5,10 @@ import { getPool } from "src/Core/Infraestructure/Database/connection";
 import { IMealIngredient } from "src/Planner/Domain/interfaces/IMealIngredient";
 import { IMealStep } from "src/Planner/Domain/interfaces/IMealStep";
 
+/** Subconsulta: slugs ordenados, separados por coma (se parsea a string[] en Node). */
+const CATEGORY_SLUGS_SUBQUERY = `(SELECT GROUP_CONCAT(mc.category_slug ORDER BY mc.category_slug SEPARATOR ',')
+   FROM meal_categories mc WHERE mc.meal_id = m.id) AS category_slugs`;
+
 interface MealRow {
   id: string;
   name: string;
@@ -14,6 +18,7 @@ interface MealRow {
   created_at: Date;
   total_calories: number;
   image: string | null;
+  category_slugs: string | null;
 }
 
 interface MealIngredientRow {
@@ -25,6 +30,15 @@ interface MealStepRow {
   meal_id: string;
   step_order: number;
   description: string;
+}
+
+function parseCategorySlugsFromRow(raw: unknown): string[] {
+  if (raw == null || raw === "") return [];
+  const s = Buffer.isBuffer(raw) ? raw.toString("utf8") : String(raw);
+  return s
+    .split(",")
+    .map((x) => x.trim())
+    .filter((x) => x.length > 0);
 }
 
 function rowToMeal(
@@ -39,6 +53,7 @@ function rowToMeal(
     mealTime: row.meal_time,
     ingredients,
     steps,
+    categories: parseCategorySlugsFromRow(row.category_slugs),
     CreatedBy: row.created_by,
     createdAt: row.created_at instanceof Date ? row.created_at : new Date(row.created_at),
     totalCalories: Number(row.total_calories),
@@ -96,6 +111,16 @@ export class MealRepositoryMySQL implements MealRepository {
         );
       }
 
+      await conn.execute("DELETE FROM meal_categories WHERE meal_id = ?", [
+        meal.id,
+      ]);
+      for (const slug of meal.categories) {
+        await conn.execute(
+          "INSERT INTO meal_categories (meal_id, category_slug) VALUES (?, ?)",
+          [meal.id, slug]
+        );
+      }
+
       return meal;
     } finally {
       conn.release();
@@ -104,7 +129,9 @@ export class MealRepositoryMySQL implements MealRepository {
 
   async findById(id: string): Promise<Meal | null> {
     const [mealRows] = await this.pool.execute(
-      "SELECT id, name, date, meal_time, created_by, created_at, total_calories, image FROM meals WHERE id = ?",
+      `SELECT m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories, m.image,
+              ${CATEGORY_SLUGS_SUBQUERY}
+       FROM meals m WHERE m.id = ?`,
       [id]
     );
     const mealRow = (Array.isArray(mealRows) ? mealRows[0] : (mealRows as any)?.[0]) as MealRow | undefined;
@@ -133,8 +160,9 @@ export class MealRepositoryMySQL implements MealRepository {
 
   async findAll(): Promise<Meal[]> {
     const [mealRows] = await this.pool.execute(
-      `SELECT id, name, date, meal_time, created_by, created_at, total_calories, image
-       FROM meals ORDER BY date DESC, meal_time`
+      `SELECT m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories, m.image,
+              ${CATEGORY_SLUGS_SUBQUERY}
+       FROM meals m ORDER BY m.date DESC, m.meal_time`
     );
     const list = (Array.isArray(mealRows) ? mealRows : []) as MealRow[];
     return this.hydrateMeals(list);
@@ -143,8 +171,9 @@ export class MealRepositoryMySQL implements MealRepository {
   async findByDate(date: Date): Promise<Meal[]> {
     const dateStr = date.toISOString().slice(0, 10);
     const [mealRows] = await this.pool.execute(
-      `SELECT id, name, date, meal_time, created_by, created_at, total_calories, image
-       FROM meals WHERE date = ? ORDER BY meal_time`,
+      `SELECT m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories, m.image,
+              ${CATEGORY_SLUGS_SUBQUERY}
+       FROM meals m WHERE m.date = ? ORDER BY m.meal_time`,
       [dateStr]
     );
     const list = (Array.isArray(mealRows) ? mealRows : []) as MealRow[];
@@ -155,8 +184,9 @@ export class MealRepositoryMySQL implements MealRepository {
     const startStr = startDate.toISOString().slice(0, 10);
     const endStr = endDate.toISOString().slice(0, 10);
     const [mealRows] = await this.pool.execute(
-      `SELECT id, name, date, meal_time, created_by, created_at, total_calories, image
-       FROM meals WHERE date >= ? AND date <= ? ORDER BY date DESC, meal_time`,
+      `SELECT m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories, m.image,
+              ${CATEGORY_SLUGS_SUBQUERY}
+       FROM meals m WHERE m.date >= ? AND m.date <= ? ORDER BY m.date DESC, m.meal_time`,
       [startStr, endStr]
     );
     const list = (Array.isArray(mealRows) ? mealRows : []) as MealRow[];
@@ -166,8 +196,9 @@ export class MealRepositoryMySQL implements MealRepository {
   async findByUserAndDate(userId: string, date: Date): Promise<Meal[]> {
     const dateStr = date.toISOString().slice(0, 10);
     const [mealRows] = await this.pool.execute(
-      `SELECT id, name, date, meal_time, created_by, created_at, total_calories, image
-       FROM meals WHERE created_by = ? AND date = ? ORDER BY meal_time`,
+      `SELECT m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories, m.image,
+              ${CATEGORY_SLUGS_SUBQUERY}
+       FROM meals m WHERE m.created_by = ? AND m.date = ? ORDER BY m.meal_time`,
       [userId, dateStr]
     );
     const list = (Array.isArray(mealRows) ? mealRows : []) as MealRow[];
@@ -176,8 +207,9 @@ export class MealRepositoryMySQL implements MealRepository {
 
   async findByUser(userId: string): Promise<Meal[]> {
     const [mealRows] = await this.pool.execute(
-      `SELECT id, name, date, meal_time, created_by, created_at, total_calories, image
-       FROM meals WHERE created_by = ? ORDER BY date DESC, meal_time`,
+      `SELECT m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories, m.image,
+              ${CATEGORY_SLUGS_SUBQUERY}
+       FROM meals m WHERE m.created_by = ? ORDER BY m.date DESC, m.meal_time`,
       [userId]
     );
     const list = (Array.isArray(mealRows) ? mealRows : []) as MealRow[];
@@ -235,8 +267,9 @@ export class MealRepositoryMySQL implements MealRepository {
 
   async getRandomMeal(userId: string): Promise<Meal | null> {
     const [mealRows] = await this.pool.execute(
-      `SELECT id, name, date, meal_time, created_by, created_at, total_calories, image
-       FROM meals WHERE created_by = ? ORDER BY RAND() LIMIT 1`,
+      `SELECT m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories, m.image,
+              ${CATEGORY_SLUGS_SUBQUERY}
+       FROM meals m WHERE m.created_by = ? ORDER BY RAND() LIMIT 1`,
       [userId]
     );
     const list = (Array.isArray(mealRows) ? mealRows : []) as MealRow[];

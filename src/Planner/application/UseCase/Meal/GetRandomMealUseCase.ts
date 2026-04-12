@@ -21,6 +21,7 @@ interface GetRandomMealResponse {
   mealTime: string;
   ingredients: MealIngredientResponse[];
   steps: MealStepResponse[];
+  categories: string[];
   totalCalories: number;
   createdAt: Date;
   image?: string | null;
@@ -68,6 +69,7 @@ export class GetRandomMealUseCase {
         stepOrder: s.stepOrder,
         description: s.description,
       })),
+      categories: meal.categories ?? [],
       totalCalories: meal.totalCalories,
       createdAt: meal.createdAt,
       image: meal.image,

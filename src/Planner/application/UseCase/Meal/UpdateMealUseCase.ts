@@ -2,6 +2,7 @@ import { MealRepository } from "../../../Domain/interfaces/MealRepository";
 import { Meal } from "../../../Domain/Entities/Meal";
 import { IngredientRepository } from "../../../Domain/interfaces/IngredientRepository";
 import { AppError } from "src/shared/Errors/AppErrors";
+import { mapPreferenceStringsToSlugs } from "src/shared/Notifications/notificationCategorySlug";
 import { normalizeMealSteps } from "./normalizeMealSteps";
 
 interface UpdateMealRequest {
@@ -16,6 +17,7 @@ interface UpdateMealRequest {
   userId: string;
   image?: string | null;
   steps?: unknown;
+  categories?: string[] | null;
 }
 
 interface MealIngredientResponse {
@@ -37,6 +39,7 @@ interface UpdateMealResponse {
   mealTime: string;
   ingredients: MealIngredientResponse[];
   steps: MealStepResponse[];
+  categories: string[];
   totalCalories: number;
   createdAt: Date;
   image?: string | null;
@@ -70,6 +73,13 @@ export class UpdateMealUseCase {
       request.steps !== undefined
         ? normalizeMealSteps(request.steps)
         : existingMeal.steps;
+
+    const updatedCategories =
+      request.categories !== undefined
+        ? request.categories == null || request.categories.length === 0
+          ? []
+          : mapPreferenceStringsToSlugs(request.categories)
+        : existingMeal.categories;
 
     if (updatedName.length < 2) {
       throw new AppError("El nombre debe tener al menos 2 caracteres", 400);
@@ -117,6 +127,7 @@ export class UpdateMealUseCase {
       mealTime: updatedMealTime,
       ingredients: updatedIngredients,
       steps: updatedSteps,
+      categories: updatedCategories,
       CreatedBy: userId,
       createdAt: existingMeal.createdAt,
       totalCalories,
@@ -135,6 +146,7 @@ export class UpdateMealUseCase {
         stepOrder: s.stepOrder,
         description: s.description,
       })),
+      categories: updatedMeal.categories,
       totalCalories,
       createdAt: updatedMeal.createdAt,
       image: updatedMeal.image,

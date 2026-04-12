@@ -226,12 +226,12 @@ Listado actualizado en máquina-legible: [`docs/routes.json`](docs/routes.json).
 
 | Método | Ruta | Descripción |
 |--------|------|-------------|
-| POST | `/api/meals` | Crear comida (`userId`, name, date, mealTime, ingredients). Opcional: `steps` (pasos de preparación). Imagen opcional: multipart campo `image`. |
-| GET | `/api/meals` | Listar comidas (query opcional: `date`). Respuesta incluye `steps` e `image`. |
+| POST | `/api/meals` | Crear comida (`userId`, name, date, mealTime, ingredients). Opcional: `steps`, `categories` (array de slugs o etiquetas; se guardan en `meal_categories`). Imagen: multipart campo `image`. |
+| GET | `/api/meals` | Listar comidas (query opcional: `date`). Respuesta incluye `steps`, `image` y `categories` (array de strings, `[]` si no hay). |
 | GET | `/api/meals/calories-summary` | Resumen de calorías del usuario (query: `date` opcional). |
 | GET | `/api/meals/date-range` | Comidas del usuario en rango (query: `startDate`, `endDate`). |
 | GET | `/api/meals/random` | Una comida aleatoria del usuario. |
-| GET | `/api/meals/:id` | Detalle de una comida. |
+| GET | `/api/meals/:id` | Detalle de una comida (incluye `categories` como array de strings). |
 | PUT | `/api/meals/:id` | Actualizar comida (`userId` + campos). Si envías la clave `steps`, reemplaza la lista (`[]` la vacía). Imagen opcional: multipart `image`. |
 | DELETE | `/api/meals/:id` | Eliminar comida (body: `userId`). |
 

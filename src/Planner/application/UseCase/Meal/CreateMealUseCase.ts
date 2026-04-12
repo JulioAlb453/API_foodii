@@ -2,6 +2,7 @@ import { Meal } from "src/Planner/Domain/Entities/Meal";
 import { MealRepository } from "src/Planner/Domain/interfaces/MealRepository";
 import { IngredientRepository } from "src/Planner/Domain/interfaces/IngredientRepository";
 import { AppError } from "src/shared/Errors/AppErrors";
+import { mapPreferenceStringsToSlugs } from "src/shared/Notifications/notificationCategorySlug";
 import { normalizeMealSteps } from "./normalizeMealSteps";
 
 interface CreateMealRequest {
@@ -15,6 +16,8 @@ interface CreateMealRequest {
   userId: string;
   image?: string | null;
   steps?: unknown;
+  /** Slugs o etiquetas reconocidas por el servidor; vacío = sin categorías. */
+  categories?: string[] | null;
 }
 
 interface MealIngredientResponse {
@@ -36,6 +39,7 @@ interface CreateMealResponse {
   mealTime: string;
   ingredients: MealIngredientResponse[];
   steps: MealStepResponse[];
+  categories: string[];
   totalCalories: number;
   createdAt: Date;
   image?: string | null;
@@ -50,6 +54,7 @@ export class CreateMealUseCase {
   async execute(request: CreateMealRequest): Promise<CreateMealResponse> {
     const { name, date, mealTime, ingredients, userId, image } = request;
     const steps = normalizeMealSteps(request.steps);
+    const categorySlugs = this.normalizeMealCategories(request.categories);
 
     if (!name || name.trim().length < 2) {
       throw new AppError(
@@ -112,6 +117,7 @@ export class CreateMealUseCase {
         amount: item.amount,
       })),
       steps,
+      categories: categorySlugs,
       CreatedBy: userId,
       createdAt: new Date(),
       totalCalories,
@@ -131,9 +137,17 @@ export class CreateMealUseCase {
         stepOrder: s.stepOrder,
         description: s.description,
       })),
+      categories: meal.categories,
       totalCalories,
       createdAt: meal.createdAt,
       image: meal.image,
     };
+  }
+
+  private normalizeMealCategories(raw: string[] | null | undefined): string[] {
+    if (raw == null || raw.length === 0) {
+      return [];
+    }
+    return mapPreferenceStringsToSlugs(raw);
   }
 }

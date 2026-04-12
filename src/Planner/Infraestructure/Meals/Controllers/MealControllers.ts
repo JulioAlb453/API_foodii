@@ -24,6 +24,30 @@ function parseStepsFromBody(body: Record<string, unknown>): unknown {
   return raw;
 }
 
+/** Devuelve `undefined` si el cliente no envía la clave; si envía null o array, devuelve eso. */
+function parseCategoriesFromBody(
+  body: Record<string, unknown>
+): string[] | null | undefined {
+  if (!Object.prototype.hasOwnProperty.call(body, "categories")) {
+    return undefined;
+  }
+  const raw = body.categories;
+  if (raw === null) return null;
+  if (raw === undefined || raw === "") return [];
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw) as unknown;
+      return Array.isArray(parsed) ? (parsed as string[]) : [];
+    } catch {
+      return [];
+    }
+  }
+  if (Array.isArray(raw)) {
+    return raw as string[];
+  }
+  return [];
+}
+
 export class MealController {
   constructor(
     private createMealUseCase: CreateMealUseCase,
@@ -55,6 +79,7 @@ export class MealController {
 
       const image = req.file ? `/uploads/${req.file.filename}` : undefined;
       const steps = parseStepsFromBody(req.body as Record<string, unknown>);
+      const categories = parseCategoriesFromBody(req.body as Record<string, unknown>);
 
       const result = await this.createMealUseCase.execute({
         name,
@@ -64,6 +89,7 @@ export class MealController {
         userId,
         image,
         steps,
+        ...(categories !== undefined ? { categories } : {}),
       });
 
       res.status(201).json({
@@ -141,6 +167,7 @@ export class MealController {
       const body = req.body as Record<string, unknown>;
       const steps =
         "steps" in body ? parseStepsFromBody(body) : undefined;
+      const categories = parseCategoriesFromBody(body);
 
       const result = await this.updateMealUseCase.execute({
         id: mealId,
@@ -151,6 +178,7 @@ export class MealController {
         userId,
         image,
         ...(steps !== undefined ? { steps } : {}),
+        ...(categories !== undefined ? { categories } : {}),
       });
 
       res.status(200).json({
