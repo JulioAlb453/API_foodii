@@ -83,7 +83,7 @@
           "method": "POST",
           "path": "/api/admin/push/topic",
           "auth": false,
-          "description": "Enviar notificación FCM a un tópico (ej. nueva receta vegana → topicSlug vegan). Header X-Admin-Secret = ADMIN_PUSH_SECRET. Ver crud-schemas.json (admin.pushTopic)."
+          "description": "Enviar notificación FCM a un tópico (ej. topicSlug high_protein o meal_prep). Header X-Admin-Secret = ADMIN_PUSH_SECRET. Ver crud-schemas.json (admin.pushTopic)."
         }
       ]
     },

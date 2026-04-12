@@ -118,7 +118,7 @@
         "fcmToken": "opcional: string | null (null borra el token en BD)"
       },
       "exampleRequest": {
-        "notificationCategoryPreferences": ["Vegano 🌿", "Fitness 💪"],
+        "notificationCategoryPreferences": ["Alto en proteína", "Meal prep"],
         "fcmToken": "fcm-device-token-opcional"
       },
       "exampleResponse": {
@@ -126,11 +126,11 @@
         "message": "Preferencias de notificación actualizadas",
         "data": {
           "id": "uuid",
-          "notificationCategoryPreferences": ["vegan", "fitness"],
+          "notificationCategoryPreferences": ["high_protein", "meal_prep"],
           "fcmTokenUpdated": true
         }
       },
-      "notes": "En BD se guardan slugs. La app Android debe suscribirse a FirebaseMessaging con esos mismos nombres de tópico tras un PATCH exitoso."
+      "notes": "En BD se guardan slugs (ej. fitness, high_protein, meal_prep). La app debe suscribirse a FirebaseMessaging con esos mismos nombres tras un PATCH exitoso. Catálogo orientado a agendación de comidas: ver notificationCategorySlug.ts."
     }
   },
   "admin": {
@@ -139,21 +139,21 @@
       "path": "/api/admin/push/topic",
       "headers": { "X-Admin-Secret": "valor de ADMIN_PUSH_SECRET en el servidor" },
       "body": {
-        "topicSlug": "string (ej. vegan)",
+        "topicSlug": "string (ej. high_protein, meal_prep)",
         "title": "string",
         "body": "string",
         "data": "opcional: objeto; valores convertidos a string (ej. { \"mealId\": \"uuid\", \"type\": \"NEW_MEAL\" })"
       },
       "exampleRequest": {
-        "topicSlug": "vegan",
-        "title": "Nueva receta",
-        "body": "Hay una nueva comida vegana en Foodii",
+        "topicSlug": "high_protein",
+        "title": "Nueva sugerencia",
+        "body": "Hay nuevas ideas altas en proteína en Foodii",
         "data": { "mealId": "uuid-de-la-comida", "type": "NEW_MEAL" }
       },
       "exampleResponse": {
         "success": true,
         "message": "Notificación enviada al tópico",
-        "data": { "messageId": "projects/.../messages/...", "topicSlug": "vegan" }
+        "data": { "messageId": "projects/.../messages/...", "topicSlug": "high_protein" }
       }
     }
   },

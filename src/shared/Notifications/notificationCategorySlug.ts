@@ -1,13 +1,19 @@
 import { AppError } from "src/shared/Errors/AppErrors";
 
+
 export const NOTIFICATION_CATEGORY_SLUGS = [
   "fitness",
-  "quesadillas",
+  "high_protein",
   "low_calorie",
+  "low_carb",
   "vegan",
-  "seafood",
-  "antojitos",
-  "desserts",
+  "quick_meals",
+  "meal_prep",
+  "family_friendly",
+  "budget_friendly",
+  "gluten_free",
+  "balanced",
+  "healthy_snacks",
   "international",
 ] as const;
 
@@ -16,15 +22,50 @@ export type NotificationCategorySlug =
 
 const SLUG_SET = new Set<string>(NOTIFICATION_CATEGORY_SLUGS);
 
+const LEGACY_SLUGS = new Set<string>([
+  "quesadillas",
+  "seafood",
+  "antojitos",
+  "desserts",
+]);
+
+const ALL_ACCEPTED_SLUGS = new Set<string>([
+  ...NOTIFICATION_CATEGORY_SLUGS,
+  ...LEGACY_SLUGS,
+]);
+
+/**
+ * Etiquetas sugeridas en la app (español) → slug.
+ * Incluye variantes sin tilde por teclado / copia.
+ */
 const LABEL_TO_SLUG = new Map<string, string>([
+  ["Fitness", "fitness"],
   ["Fitness 💪", "fitness"],
-  ["Quesadillas 🌮", "quesadillas"],
-  ["Bajo en calorías 🥗", "low_calorie"],
-  ["Vegano 🌿", "vegan"],
-  ["Mariscos 🦐", "seafood"],
-  ["Antojitos 🌯", "antojitos"],
-  ["Postres 🍰", "desserts"],
-  ["Internacional 🌎", "international"],
+  ["Alto en proteína", "high_protein"],
+  ["Alto en proteina", "high_protein"],
+  ["Bajo en calorías", "low_calorie"],
+  ["Bajo en calorias", "low_calorie"],
+  ["Bajo en carbohidratos", "low_carb"],
+  ["Bajo en carbos", "low_carb"],
+  ["Vegano", "vegan"],
+  ["Plant-based", "vegan"],
+  ["Plant based", "vegan"],
+  ["Comidas rápidas", "quick_meals"],
+  ["Rápido de preparar", "quick_meals"],
+  ["Rapido de preparar", "quick_meals"],
+  ["Meal prep", "meal_prep"],
+  ["Preparación por adelantado", "meal_prep"],
+  ["Preparacion por adelantado", "meal_prep"],
+  ["Para la familia", "family_friendly"],
+  ["Económico", "budget_friendly"],
+  ["Economico", "budget_friendly"],
+  ["Bueno para el presupuesto", "budget_friendly"],
+  ["Sin gluten", "gluten_free"],
+  ["Equilibrado", "balanced"],
+  ["Comida equilibrada", "balanced"],
+  ["Snacks saludables", "healthy_snacks"],
+  ["Internacional", "international"],
+  ["Cocina internacional", "international"],
 ]);
 
 function mapSinglePreference(raw: string): string {
@@ -37,18 +78,15 @@ function mapSinglePreference(raw: string): string {
   if (fromLabel) return fromLabel;
 
   const asSlug = trimmed.toLowerCase().replace(/\s+/g, "_");
-  if (SLUG_SET.has(asSlug)) return asSlug;
+  if (ALL_ACCEPTED_SLUGS.has(asSlug)) return asSlug;
 
   throw new AppError(
-    `Categoría no reconocida: "${raw}". Envía la etiqueta exacta de la app o uno de los slugs: ${NOTIFICATION_CATEGORY_SLUGS.join(", ")}`,
+    `Categoría no reconocida: "${raw}". Usa una etiqueta de la app o un slug canónico: ${NOTIFICATION_CATEGORY_SLUGS.join(", ")}`,
     400
   );
 }
 
-/**
- * Convierte la lista enviada por el cliente (etiquetas y/o slugs) en slugs únicos
- * almacenables en BD y alineables con `FirebaseMessaging.subscribeToTopic(slug)`.
- */
+
 export function mapPreferenceStringsToSlugs(categories: string[]): string[] {
   if (!Array.isArray(categories)) {
     throw new AppError(

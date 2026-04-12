@@ -140,9 +140,11 @@ Variables usadas por la API:
 ### Notificaciones push (FCM) y preferencias
 
 - Las preferencias de categoría se guardan en MySQL como **JSON array de slugs** (`users.notification_category_preferences`), alineados con los **nombres de tópico** que la app debe usar en `FirebaseMessaging.subscribeToTopic(slug)`.
-- El servidor mapea etiquetas de la app (p. ej. `Vegano 🌿`) a slugs (`vegan`). Ver `src/shared/Notifications/notificationCategorySlug.ts`.
+
+**Slugs canónicos (agendación / estilo de comida):** `fitness`, `high_protein`, `low_calorie`, `low_carb`, `vegan`, `quick_meals`, `meal_prep`, `family_friendly`, `budget_friendly`, `gluten_free`, `balanced`, `healthy_snacks`, `international`. Etiquetas en español equivalentes están definidas en código (`notificationCategorySlug.ts`). Por compatibilidad, siguen aceptándose temporalmente los slugs antiguos `quesadillas`, `seafood`, `antojitos`, `desserts` si un cliente aún los envía.
+- El servidor mapea etiquetas de la app (orientadas a **agendación y estilo de comida**: fitness, alto en proteína, meal prep, etc.) a **slugs** estables para FCM. Lista y etiquetas en `src/shared/Notifications/notificationCategorySlug.ts`.
 - Tras un `PATCH /api/users/preferences` correcto, la app debe **sincronizar suscripciones** a tópicos en el dispositivo según la lista devuelta.
-- Para publicar una notificación masiva a quien esté suscrito a un tópico (p. ej. nueva receta vegana), usar `POST /api/admin/push/topic` con cuerpo `topicSlug`, `title`, `body` y opcional `data` (p. ej. `{ "mealId": "..." }`). Requiere `ADMIN_PUSH_SECRET` y credenciales Firebase configuradas.
+- Para publicar una notificación masiva a quien esté suscrito a un tópico (p. ej. contenido `high_protein`), usar `POST /api/admin/push/topic` con cuerpo `topicSlug`, `title`, `body` y opcional `data` (p. ej. `{ "mealId": "..." }`). Requiere `ADMIN_PUSH_SECRET` y credenciales Firebase configuradas.
 
 ### Scripts
 
@@ -184,7 +186,7 @@ En **`users`** ya existen dos columnas pensadas para este flujo:
 | Columna | Tipo | Uso recomendado |
 |---------|------|-----------------|
 | `fcm_token` | `VARCHAR(500) NULL` | Último token de dispositivo del usuario (mensajes directos o diagnóstico). La API mantiene exclusividad: un mismo token no puede estar en dos usuarios. |
-| `notification_category_preferences` | `JSON NULL` | Array JSON de **slugs** estables (`vegan`, `fitness`, …), no texto largo con emojis. Ventajas: poco espacio, índice/JSON_TABLE si más adelante necesitas analítica, misma cadena que el tópico FCM. |
+| `notification_category_preferences` | `JSON NULL` | Array JSON de **slugs** estables (`fitness`, `high_protein`, `meal_prep`, …), alineados con tópicos FCM. Ventajas: poco espacio, misma cadena que `subscribeToTopic` en Android. |
 
 **Alternativa más normalizada:** tabla `user_notification_topics (user_id, topic_slug)` con clave `(user_id, topic_slug)` si necesitas consultas frecuentes del estilo “cuántos usuarios eligieron vegan” o joins por categoría. Para el volumen típico de una app de comidas, la columna JSON en `users` suele ser suficiente y reduce joins.
 
