@@ -4,12 +4,14 @@ import { MealController } from "src/Planner/Infraestructure/Meals/Controllers/Me
 import { IngredientController } from "src/Planner/Infraestructure/Ingredients/Controllers/IngredientsController";
 import { DishController } from "src/Planner/Infraestructure/Dishes/Controllers/DishControllers";
 import { upload } from "src/Core/Infraestructure/Middleware/upload.middleware";
+import { NotificationsController } from "src/Users/infrastructure/Controllers/NotificationsController";
 
 export interface RouteDependencies {
   authController: AuthController;
   mealController: MealController;
   ingredientController: IngredientController;
   dishController: DishController;
+  notificationsController: NotificationsController;
   authMiddleware: RequestHandler;
 }
 
@@ -19,6 +21,7 @@ export function registerRoutes(app: Express, deps: RouteDependencies): void {
     mealController,
     ingredientController,
     dishController,
+    notificationsController,
     authMiddleware,
   } = deps;
 
@@ -48,6 +51,14 @@ export function registerRoutes(app: Express, deps: RouteDependencies): void {
   );
   app.post("/api/auth/logout", authMiddleware, (req, res) =>
     authController.logout(req, res)
+  );
+
+  app.patch("/api/users/preferences", authMiddleware, (req, res) =>
+    authController.patchNotificationPreferences(req, res)
+  );
+
+  app.post("/api/admin/push/topic", (req, res) =>
+    notificationsController.sendTopicNotification(req, res)
   );
 
   // ----- Meals (requieren Authorization: Bearer <token>) -----

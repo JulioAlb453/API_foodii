@@ -66,6 +66,28 @@
       ]
     },
     {
+      "group": "users",
+      "endpoints": [
+        {
+          "method": "PATCH",
+          "path": "/api/users/preferences",
+          "auth": true,
+          "description": "Actualizar preferencias de notificación (etiquetas o slugs → se guardan slugs) y opcionalmente fcmToken. Usuario = JWT. Ver crud-schemas.json (users.patchPreferences)."
+        }
+      ]
+    },
+    {
+      "group": "admin",
+      "endpoints": [
+        {
+          "method": "POST",
+          "path": "/api/admin/push/topic",
+          "auth": false,
+          "description": "Enviar notificación FCM a un tópico (ej. nueva receta vegana → topicSlug vegan). Header X-Admin-Secret = ADMIN_PUSH_SECRET. Ver crud-schemas.json (admin.pushTopic)."
+        }
+      ]
+    },
+    {
       "group": "meals",
       "endpoints": [
         {

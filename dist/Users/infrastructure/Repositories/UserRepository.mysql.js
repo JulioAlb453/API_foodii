@@ -95,5 +95,36 @@ class UserRepositoryMySQL {
             conn.release();
         }
     }
+    async updateNotificationPreferences(userId, categorySlugs, fcmToken) {
+        const prefsJson = categorySlugs != null && categorySlugs.length > 0
+            ? JSON.stringify(categorySlugs)
+            : null;
+        const conn = await this.pool.getConnection();
+        try {
+            await conn.beginTransaction();
+            if (fcmToken !== undefined && fcmToken !== null) {
+                await conn.execute(`UPDATE users SET fcm_token = NULL, updated_at = CURRENT_TIMESTAMP(3)
+           WHERE fcm_token = ? AND id <> ?`, [fcmToken, userId]);
+                await conn.execute(`UPDATE users SET notification_category_preferences = ?, fcm_token = ?, updated_at = CURRENT_TIMESTAMP(3)
+           WHERE id = ?`, [prefsJson, fcmToken, userId]);
+            }
+            else if (fcmToken === null) {
+                await conn.execute(`UPDATE users SET notification_category_preferences = ?, fcm_token = NULL, updated_at = CURRENT_TIMESTAMP(3)
+           WHERE id = ?`, [prefsJson, userId]);
+            }
+            else {
+                await conn.execute(`UPDATE users SET notification_category_preferences = ?, updated_at = CURRENT_TIMESTAMP(3)
+           WHERE id = ?`, [prefsJson, userId]);
+            }
+            await conn.commit();
+        }
+        catch (err) {
+            await conn.rollback();
+            throw err;
+        }
+        finally {
+            conn.release();
+        }
+    }
 }
 exports.UserRepositoryMySQL = UserRepositoryMySQL;

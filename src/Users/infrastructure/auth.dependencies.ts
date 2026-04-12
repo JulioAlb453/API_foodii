@@ -9,6 +9,7 @@ import { GetUserProfileUseCase } from "src/Users/Application/UseCase/GetUserProf
 import { UpdateProfileUseCase } from "src/Users/Application/UseCase/UpdateUserUseCase";
 import { DeleteAccountUseCase } from "src/Users/Application/UseCase/DeleteAccoutUseCase";
 import { VerifyTokenUseCase } from "src/Users/Application/UseCase/VerifyTokenUseCase";
+import { UpdateNotificationPreferencesUseCase } from "src/Users/Application/UseCase/UpdateNotificationPreferencesUseCase";
 import { AuthController } from "src/Users/infrastructure/Controllers/UsersController";
 
 export interface AuthDependenciesOptions {
@@ -39,6 +40,8 @@ export function createAuthDependencies(options?: AuthDependenciesOptions) {
     tokenService,
     userRepository
   );
+  const updateNotificationPreferencesUseCase =
+    new UpdateNotificationPreferencesUseCase(userRepository);
 
   const authController = new AuthController(
     registerUserUseCase,
@@ -46,7 +49,8 @@ export function createAuthDependencies(options?: AuthDependenciesOptions) {
     getUserProfileUseCase,
     updateProfileUseCase,
     deleteAccountUseCase,
-    verifyTokenUseCase
+    verifyTokenUseCase,
+    updateNotificationPreferencesUseCase
   );
 
   return {

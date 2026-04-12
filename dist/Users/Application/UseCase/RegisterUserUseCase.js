@@ -4,6 +4,7 @@ exports.RegisterUserUseCase = void 0;
 const crypto_1 = require("crypto");
 const User_1 = require("src/Users/Domain/Entities/User");
 const AppErrors_1 = require("src/shared/Errors/AppErrors");
+const notificationCategorySlug_1 = require("src/shared/Notifications/notificationCategorySlug");
 class RegisterUserUseCase {
     constructor(userRepository, hashService, tokenService) {
         this.userRepository = userRepository;
@@ -50,24 +51,11 @@ class RegisterUserUseCase {
         if (!Array.isArray(raw)) {
             throw new AppErrors_1.AppError("notificationCategoryPreferences debe ser un array de strings", 400);
         }
-        const seen = new Set();
-        const out = [];
-        for (const item of raw) {
-            if (typeof item !== "string") {
-                throw new AppErrors_1.AppError("Cada categoría en notificationCategoryPreferences debe ser texto", 400);
-            }
-            const s = item.trim().toLowerCase();
-            if (s.length === 0)
-                continue;
-            if (s.length > 64) {
-                throw new AppErrors_1.AppError("Cada categoría no puede superar 64 caracteres", 400);
-            }
-            if (!seen.has(s)) {
-                seen.add(s);
-                out.push(s);
-            }
+        if (raw.length === 0) {
+            return null;
         }
-        return out.length > 0 ? out : null;
+        const slugs = (0, notificationCategorySlug_1.mapPreferenceStringsToSlugs)(raw);
+        return slugs.length > 0 ? slugs : null;
     }
     validateInput(username, password) {
         if (!username || username.trim().length === 0) {

@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS users (
   username    VARCHAR(100) NOT NULL,
   password    VARCHAR(255) NOT NULL,
   fcm_token   VARCHAR(500)  NULL COMMENT 'FCM push; un token solo puede estar asignado a un usuario',
-  notification_category_preferences JSON NULL COMMENT 'Array de códigos de categoría para notificaciones',
+  notification_category_preferences JSON NULL COMMENT 'Array JSON de slugs FCM (ej. vegan, fitness). Mapeo desde etiquetas de la app en el servidor.',
   created_at  DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at  DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   PRIMARY KEY (id),

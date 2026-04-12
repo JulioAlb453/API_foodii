@@ -88,7 +88,8 @@ docs/
 
 ### Inyección de dependencias
 
-- **`auth.dependencies.ts`:** Recibe opcionalmente `userRepository`, `hashService`, `tokenService`. Crea los 6 use cases de Users y el `AuthController`. Exporta `authController` y `tokenService`.
+- **`auth.dependencies.ts`:** Recibe opcionalmente `userRepository`, `hashService`, `tokenService`. Crea los casos de uso de Users (registro, login, perfil, actualización, borrado, verificación de token, preferencias de notificación) y el `AuthController`. Exporta `authController` y `tokenService`.
+- **`notificationPush.dependencies.ts`:** Crea `FirebaseAdminFcmPushService` y `NotificationsController` para envíos FCM por tópico (uso administrativo).
 - **`ingredient.dependencies.ts`:** Recibe opcionalmente `ingredientRepository`. Crea los use cases de Ingredients y el `IngredientController`.
 - **`meal.dependencies.ts`:** Recibe opcionalmente `mealRepository` e `ingredientRepository`. Crea los use cases de Meal y el `MealController`.
 
@@ -130,8 +131,18 @@ Variables usadas por la API:
 | `DB_USER` | Usuario de MySQL | root |
 | `DB_PASSWORD` | Contraseña de MySQL | (vacío) |
 | `DB_NAME` | Nombre de la base de datos | foodii_db |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | (Opcional) JSON del service account de Firebase en una sola línea, para FCM Admin SDK | — |
+| `GOOGLE_APPLICATION_CREDENTIALS` | (Opcional) Ruta a un archivo JSON de credenciales de Firebase / GCP | — |
+| `ADMIN_PUSH_SECRET` | (Opcional) Secreto compartido; si está definido, `POST /api/admin/push/topic` exige header `X-Admin-Secret` con este valor | — |
 
 **Importante:** La API usa MySQL. Crea antes la base de datos y las tablas con `database/schema.sql` (ver sección [Base de datos (MySQL)](#base-de-datos-mysql)).
+
+### Notificaciones push (FCM) y preferencias
+
+- Las preferencias de categoría se guardan en MySQL como **JSON array de slugs** (`users.notification_category_preferences`), alineados con los **nombres de tópico** que la app debe usar en `FirebaseMessaging.subscribeToTopic(slug)`.
+- El servidor mapea etiquetas de la app (p. ej. `Vegano 🌿`) a slugs (`vegan`). Ver `src/shared/Notifications/notificationCategorySlug.ts`.
+- Tras un `PATCH /api/users/preferences` correcto, la app debe **sincronizar suscripciones** a tópicos en el dispositivo según la lista devuelta.
+- Para publicar una notificación masiva a quien esté suscrito a un tópico (p. ej. nueva receta vegana), usar `POST /api/admin/push/topic` con cuerpo `topicSlug`, `title`, `body` y opcional `data` (p. ej. `{ "mealId": "..." }`). Requiere `ADMIN_PUSH_SECRET` y credenciales Firebase configuradas.
 
 ### Scripts
 
@@ -166,6 +177,17 @@ mysql -u root -p < database/schema.sql
 
 Desde el cliente MySQL: `source /ruta/al/proyecto/database/schema.sql`
 
+### Preferencias de notificación y FCM (modelo de datos)
+
+En **`users`** ya existen dos columnas pensadas para este flujo:
+
+| Columna | Tipo | Uso recomendado |
+|---------|------|-----------------|
+| `fcm_token` | `VARCHAR(500) NULL` | Último token de dispositivo del usuario (mensajes directos o diagnóstico). La API mantiene exclusividad: un mismo token no puede estar en dos usuarios. |
+| `notification_category_preferences` | `JSON NULL` | Array JSON de **slugs** estables (`vegan`, `fitness`, …), no texto largo con emojis. Ventajas: poco espacio, índice/JSON_TABLE si más adelante necesitas analítica, misma cadena que el tópico FCM. |
+
+**Alternativa más normalizada:** tabla `user_notification_topics (user_id, topic_slug)` con clave `(user_id, topic_slug)` si necesitas consultas frecuentes del estilo “cuántos usuarios eligieron vegan” o joins por categoría. Para el volumen típico de una app de comidas, la columna JSON en `users` suele ser suficiente y reduce joins.
+
 ---
 
 ## Endpoints
@@ -185,6 +207,18 @@ Listado actualizado en máquina-legible: [`docs/routes.json`](docs/routes.json).
 | GET | `/api/auth/verify-token` | Sí | Verificar token del header Bearer. |
 | DELETE | `/api/auth/account` | Sí | Eliminar cuenta (body: `{ "password": "..." }`). |
 | POST | `/api/auth/logout` | Sí | Cerrar sesión (sin invalidación de token en esta versión). |
+
+### Usuarios — preferencias (`/api/users`)
+
+| Método | Ruta | Auth | Descripción |
+|--------|------|------|-------------|
+| PATCH | `/api/users/preferences` | Sí | Actualizar `notificationCategoryPreferences` (array o `null`) y opcionalmente `fcmToken`. El usuario se identifica por el JWT. |
+
+### Admin — push (`/api/admin`)
+
+| Método | Ruta | Auth | Descripción |
+|--------|------|------|-------------|
+| POST | `/api/admin/push/topic` | Header `X-Admin-Secret` | Enviar notificación FCM al tópico indicado (`topicSlug`). Body: `title`, `body`, `data` opcional (strings para la app, p. ej. `mealId`). |
 
 ### Meals (`/api/meals`) — todas con Bearer token
 

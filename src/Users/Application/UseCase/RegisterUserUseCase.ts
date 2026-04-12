@@ -2,6 +2,7 @@ import { randomUUID } from "crypto";
 import { User } from "src/Users/Domain/Entities/User";
 import { UserRepository } from "src/Users/Domain/Interfaces/UserRepository";
 import { AppError } from "src/shared/Errors/AppErrors";
+import { mapPreferenceStringsToSlugs } from "src/shared/Notifications/notificationCategorySlug";
 import { HashService } from "src/Core/Application/Ports/HashService.interface";
 import { TokenService } from "src/Core/Application/Ports/TokenService.interface";
 
@@ -86,26 +87,11 @@ export class RegisterUserUseCase {
         400
       );
     }
-    const seen = new Set<string>();
-    const out: string[] = [];
-    for (const item of raw) {
-      if (typeof item !== "string") {
-        throw new AppError(
-          "Cada categoría en notificationCategoryPreferences debe ser texto",
-          400
-        );
-      }
-      const s = item.trim().toLowerCase();
-      if (s.length === 0) continue;
-      if (s.length > 64) {
-        throw new AppError("Cada categoría no puede superar 64 caracteres", 400);
-      }
-      if (!seen.has(s)) {
-        seen.add(s);
-        out.push(s);
-      }
+    if (raw.length === 0) {
+      return null;
     }
-    return out.length > 0 ? out : null;
+    const slugs = mapPreferenceStringsToSlugs(raw as string[]);
+    return slugs.length > 0 ? slugs : null;
   }
 
   private validateInput(username: string, password: string): void {

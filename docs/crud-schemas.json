@@ -108,6 +108,55 @@
       "exampleResponse": { "success": true, "message": "Logout exitoso" }
     }
   },
+  "users": {
+    "patchPreferences": {
+      "method": "PATCH",
+      "path": "/api/users/preferences",
+      "headers": { "Authorization": "Bearer <token>" },
+      "body": {
+        "notificationCategoryPreferences": "string[] (etiquetas exactas de la app o slugs) | null",
+        "fcmToken": "opcional: string | null (null borra el token en BD)"
+      },
+      "exampleRequest": {
+        "notificationCategoryPreferences": ["Vegano 🌿", "Fitness 💪"],
+        "fcmToken": "fcm-device-token-opcional"
+      },
+      "exampleResponse": {
+        "success": true,
+        "message": "Preferencias de notificación actualizadas",
+        "data": {
+          "id": "uuid",
+          "notificationCategoryPreferences": ["vegan", "fitness"],
+          "fcmTokenUpdated": true
+        }
+      },
+      "notes": "En BD se guardan slugs. La app Android debe suscribirse a FirebaseMessaging con esos mismos nombres de tópico tras un PATCH exitoso."
+    }
+  },
+  "admin": {
+    "pushTopic": {
+      "method": "POST",
+      "path": "/api/admin/push/topic",
+      "headers": { "X-Admin-Secret": "valor de ADMIN_PUSH_SECRET en el servidor" },
+      "body": {
+        "topicSlug": "string (ej. vegan)",
+        "title": "string",
+        "body": "string",
+        "data": "opcional: objeto; valores convertidos a string (ej. { \"mealId\": \"uuid\", \"type\": \"NEW_MEAL\" })"
+      },
+      "exampleRequest": {
+        "topicSlug": "vegan",
+        "title": "Nueva receta",
+        "body": "Hay una nueva comida vegana en Foodii",
+        "data": { "mealId": "uuid-de-la-comida", "type": "NEW_MEAL" }
+      },
+      "exampleResponse": {
+        "success": true,
+        "message": "Notificación enviada al tópico",
+        "data": { "messageId": "projects/.../messages/...", "topicSlug": "vegan" }
+      }
+    }
+  },
   "meals": {
     "create": {
       "method": "POST",

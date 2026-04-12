@@ -32,5 +32,20 @@ class UserRepositories {
             user.fcmToken = fcmToken;
         }
     }
+    async updateNotificationPreferences(userId, categorySlugs, fcmToken) {
+        const user = this.users.get(userId);
+        if (!user)
+            return;
+        user.notificationCategoryPreferences = categorySlugs;
+        user.updatedAt = new Date();
+        if (fcmToken !== undefined) {
+            if (fcmToken === null) {
+                user.fcmToken = null;
+            }
+            else {
+                await this.assignFcmTokenExclusive(userId, fcmToken);
+            }
+        }
+    }
 }
 exports.UserRepositories = UserRepositories;

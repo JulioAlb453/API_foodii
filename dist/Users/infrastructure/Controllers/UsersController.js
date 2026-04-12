@@ -2,13 +2,14 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 class AuthController {
-    constructor(registerUserUseCase, loginUserUseCase, getUserProfileUseCase, updateProfileUseCase, deleteAccountUseCase, verifyTokenUseCase) {
+    constructor(registerUserUseCase, loginUserUseCase, getUserProfileUseCase, updateProfileUseCase, deleteAccountUseCase, verifyTokenUseCase, updateNotificationPreferencesUseCase) {
         this.registerUserUseCase = registerUserUseCase;
         this.loginUserUseCase = loginUserUseCase;
         this.getUserProfileUseCase = getUserProfileUseCase;
         this.updateProfileUseCase = updateProfileUseCase;
         this.deleteAccountUseCase = deleteAccountUseCase;
         this.verifyTokenUseCase = verifyTokenUseCase;
+        this.updateNotificationPreferencesUseCase = updateNotificationPreferencesUseCase;
     }
     async register(req, res) {
         try {
@@ -295,6 +296,7 @@ class AuthController {
                         'POST /api/auth/login',
                         'GET /api/auth/profile',
                         'PUT /api/auth/profile',
+                        'PATCH /api/users/preferences',
                         'GET /api/auth/verify-token',
                         'POST /api/auth/verify-token',
                         'DELETE /api/auth/account',
@@ -307,6 +309,42 @@ class AuthController {
             res.status(500).json({
                 success: false,
                 error: 'Auth service health check failed'
+            });
+        }
+    }
+    /**
+     * Preferencias de notificación (categorías → slugs en BD) y opcionalmente FCM token.
+     * El usuario se identifica por JWT; no uses userId del body en producción.
+     */
+    async patchNotificationPreferences(req, res) {
+        try {
+            const userId = req.user.id;
+            const { notificationCategoryPreferences, fcmToken } = req.body ?? {};
+            if (notificationCategoryPreferences !== null &&
+                !Array.isArray(notificationCategoryPreferences)) {
+                res.status(400).json({
+                    success: false,
+                    error: 'notificationCategoryPreferences debe ser un array de strings o null',
+                });
+                return;
+            }
+            const hasFcmKey = Object.prototype.hasOwnProperty.call(req.body ?? {}, "fcmToken");
+            const result = await this.updateNotificationPreferencesUseCase.execute({
+                userId,
+                notificationCategoryPreferences,
+                fcmToken: hasFcmKey ? fcmToken : undefined,
+            });
+            res.status(200).json({
+                success: true,
+                message: "Preferencias de notificación actualizadas",
+                data: result,
+            });
+        }
+        catch (error) {
+            const statusCode = error.statusCode || 500;
+            res.status(statusCode).json({
+                success: false,
+                error: error.message,
             });
         }
     }

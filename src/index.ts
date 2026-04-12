@@ -13,6 +13,7 @@ import { IngredientRepositoryMySQL } from "src/Planner/Infraestructure/Ingredien
 import { createMealDependencies } from "src/Planner/Infraestructure/Meals/meal.dependencies";
 import { MealRepositoryMySQL } from "src/Planner/Infraestructure/Meals/Repositories/MealRepository.mysql";
 import { dishController } from "src/Planner/Infraestructure/Dishes/dish.dependencies";
+import { createNotificationPushDependencies } from "src/Users/infrastructure/notificationPush.dependencies";
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -41,12 +42,14 @@ const { mealController } = createMealDependencies({
 
 
 const authMiddleware = createAuthMiddleware(tokenService);
+const { notificationsController } = createNotificationPushDependencies();
 
 registerRoutes(app, {
   authController,
   mealController,
   ingredientController,
   dishController,
+  notificationsController,
   authMiddleware,
 });
 

@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.registerRoutes = registerRoutes;
 const upload_middleware_1 = require("src/Core/Infraestructure/Middleware/upload.middleware");
 function registerRoutes(app, deps) {
-    const { authController, mealController, ingredientController, dishController, authMiddleware, } = deps;
+    const { authController, mealController, ingredientController, dishController, notificationsController, authMiddleware, } = deps;
     // ----- Auth (Users) -----
     app.post("/api/auth/register", (req, res) => authController.register(req, res));
     app.post("/api/auth/login", (req, res) => authController.login(req, res));
@@ -14,6 +14,8 @@ function registerRoutes(app, deps) {
     app.get("/api/auth/verify-token", authMiddleware, (req, res) => authController.verifyToken(req, res));
     app.delete("/api/auth/account", authMiddleware, (req, res) => authController.deleteAccount(req, res));
     app.post("/api/auth/logout", authMiddleware, (req, res) => authController.logout(req, res));
+    app.patch("/api/users/preferences", authMiddleware, (req, res) => authController.patchNotificationPreferences(req, res));
+    app.post("/api/admin/push/topic", (req, res) => notificationsController.sendTopicNotification(req, res));
     // ----- Meals (requieren Authorization: Bearer <token>) -----
     app.post("/api/meals", authMiddleware, upload_middleware_1.upload.single("image"), (req, res) => mealController.create(req, res));
     app.get("/api/meals", authMiddleware, (req, res) => mealController.getAll(req, res));

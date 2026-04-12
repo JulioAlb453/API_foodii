@@ -10,6 +10,7 @@ const GetUserProfileUseCase_1 = require("src/Users/Application/UseCase/GetUserPr
 const UpdateUserUseCase_1 = require("src/Users/Application/UseCase/UpdateUserUseCase");
 const DeleteAccoutUseCase_1 = require("src/Users/Application/UseCase/DeleteAccoutUseCase");
 const VerifyTokenUseCase_1 = require("src/Users/Application/UseCase/VerifyTokenUseCase");
+const UpdateNotificationPreferencesUseCase_1 = require("src/Users/Application/UseCase/UpdateNotificationPreferencesUseCase");
 const UsersController_1 = require("src/Users/infrastructure/Controllers/UsersController");
 function createAuthDependencies(options) {
     const userRepository = options?.userRepository ?? new UserRepository_1.UserRepositories();
@@ -21,7 +22,8 @@ function createAuthDependencies(options) {
     const updateProfileUseCase = new UpdateUserUseCase_1.UpdateProfileUseCase(userRepository);
     const deleteAccountUseCase = new DeleteAccoutUseCase_1.DeleteAccountUseCase(userRepository);
     const verifyTokenUseCase = new VerifyTokenUseCase_1.VerifyTokenUseCase(tokenService, userRepository);
-    const authController = new UsersController_1.AuthController(registerUserUseCase, loginUserUseCase, getUserProfileUseCase, updateProfileUseCase, deleteAccountUseCase, verifyTokenUseCase);
+    const updateNotificationPreferencesUseCase = new UpdateNotificationPreferencesUseCase_1.UpdateNotificationPreferencesUseCase(userRepository);
+    const authController = new UsersController_1.AuthController(registerUserUseCase, loginUserUseCase, getUserProfileUseCase, updateProfileUseCase, deleteAccountUseCase, verifyTokenUseCase, updateNotificationPreferencesUseCase);
     return {
         authController,
         tokenService,

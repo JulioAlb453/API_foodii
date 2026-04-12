@@ -18,6 +18,7 @@ const IngredientRepository_mysql_1 = require("src/Planner/Infraestructure/Ingred
 const meal_dependencies_1 = require("src/Planner/Infraestructure/Meals/meal.dependencies");
 const MealRepository_mysql_1 = require("src/Planner/Infraestructure/Meals/Repositories/MealRepository.mysql");
 const dish_dependencies_1 = require("src/Planner/Infraestructure/Dishes/dish.dependencies");
+const notificationPush_dependencies_1 = require("src/Users/infrastructure/notificationPush.dependencies");
 const PORT = Number(process.env.PORT) || 3000;
 const app = (0, express_1.default)();
 app.use((0, cors_1.default)());
@@ -38,11 +39,13 @@ const { mealController } = (0, meal_dependencies_1.createMealDependencies)({
     ingredientRepository,
 });
 const authMiddleware = (0, auth_middleware_1.createAuthMiddleware)(tokenService);
+const { notificationsController } = (0, notificationPush_dependencies_1.createNotificationPushDependencies)();
 (0, routes_1.registerRoutes)(app, {
     authController,
     mealController,
     ingredientController,
     dishController: dish_dependencies_1.dishController,
+    notificationsController,
     authMiddleware,
 });
 app.listen(PORT, '0.0.0.0', () => {
