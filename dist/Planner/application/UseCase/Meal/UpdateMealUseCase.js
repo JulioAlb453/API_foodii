@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.UpdateMealUseCase = void 0;
 const Meal_1 = require("../../../Domain/Entities/Meal");
 const AppErrors_1 = require("src/shared/Errors/AppErrors");
+const notificationCategorySlug_1 = require("src/shared/Notifications/notificationCategorySlug");
 const normalizeMealSteps_1 = require("./normalizeMealSteps");
 class UpdateMealUseCase {
     constructor(mealRepository, ingredientRepository) {
@@ -26,6 +27,11 @@ class UpdateMealUseCase {
         const updatedSteps = request.steps !== undefined
             ? (0, normalizeMealSteps_1.normalizeMealSteps)(request.steps)
             : existingMeal.steps;
+        const updatedCategories = request.categories !== undefined
+            ? request.categories == null || request.categories.length === 0
+                ? []
+                : (0, notificationCategorySlug_1.mapPreferenceStringsToSlugs)(request.categories)
+            : existingMeal.categories;
         if (updatedName.length < 2) {
             throw new AppErrors_1.AppError("El nombre debe tener al menos 2 caracteres", 400);
         }
@@ -61,6 +67,7 @@ class UpdateMealUseCase {
             mealTime: updatedMealTime,
             ingredients: updatedIngredients,
             steps: updatedSteps,
+            categories: updatedCategories,
             CreatedBy: userId,
             createdAt: existingMeal.createdAt,
             totalCalories,
@@ -77,6 +84,7 @@ class UpdateMealUseCase {
                 stepOrder: s.stepOrder,
                 description: s.description,
             })),
+            categories: updatedMeal.categories,
             totalCalories,
             createdAt: updatedMeal.createdAt,
             image: updatedMeal.image,

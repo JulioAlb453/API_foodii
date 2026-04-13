@@ -36,6 +36,7 @@ class GetMealByIdUseCase {
                 stepOrder: s.stepOrder,
                 description: s.description,
             })),
+            categories: meal.categories ?? [],
             totalCalories: meal.totalCalories,
             createdAt: meal.createdAt,
             image: meal.image,

@@ -26,6 +26,7 @@ class GetMealsByDateRangeUseCase {
                 name: meal.name,
                 date: meal.date,
                 mealTime: meal.mealTime,
+                categories: meal.categories ?? [],
                 totalCalories: meal.totalCalories,
                 createdAt: meal.createdAt,
             });

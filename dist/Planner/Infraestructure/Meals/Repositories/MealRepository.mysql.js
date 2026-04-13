@@ -3,6 +3,33 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MealRepositoryMySQL = void 0;
 const Meal_1 = require("src/Planner/Domain/Entities/Meal");
 const connection_1 = require("src/Core/Infraestructure/Database/connection");
+/** Subconsulta: slugs ordenados, separados por coma (se parsea a string[] en Node). Sin JOIN principal → no afecta `image`. */
+const CATEGORY_SLUGS_SUBQUERY = `(SELECT GROUP_CONCAT(mc.category_slug ORDER BY mc.category_slug SEPARATOR ',')
+   FROM meal_categories mc WHERE mc.meal_id = m.id) AS category_slugs`;
+function parseCategorySlugsFromRow(raw) {
+    if (raw == null || raw === "")
+        return [];
+    const s = Buffer.isBuffer(raw) ? raw.toString("utf8") : String(raw);
+    return s
+        .split(",")
+        .map((x) => x.trim())
+        .filter((x) => x.length > 0);
+}
+/** URL o ruta de imagen; null si vacío. Soporta Buffer (mysql2 según tipo/collation). */
+function parseImageFromRow(row) {
+    const raw = row.meal_image ??
+        row.image ??
+        row["m.image"] ??
+        (typeof row.IMAGE === "string" ? row.IMAGE : undefined);
+    if (raw == null || raw === "")
+        return null;
+    if (Buffer.isBuffer(raw)) {
+        const s = raw.toString("utf8").trim();
+        return s.length ? s : null;
+    }
+    const s = String(raw).trim();
+    return s.length ? s : null;
+}
 function rowToMeal(row, ingredients, steps) {
     return Meal_1.Meal.create({
         id: row.id,
@@ -11,12 +38,17 @@ function rowToMeal(row, ingredients, steps) {
         mealTime: row.meal_time,
         ingredients,
         steps,
+        categories: parseCategorySlugsFromRow(row.category_slugs),
         CreatedBy: row.created_by,
         createdAt: row.created_at instanceof Date ? row.created_at : new Date(row.created_at),
         totalCalories: Number(row.total_calories),
-        image: row.image ?? null,
+        image: parseImageFromRow(row),
     });
 }
+/** Lista de columnas base de `meals` + categorías (siempre mismo orden para todos los SELECT). */
+const MEAL_BASE_SELECT = `m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories,
+       m.image AS meal_image,
+       ${CATEGORY_SLUGS_SUBQUERY}`;
 class MealRepositoryMySQL {
     constructor(pool) {
         this.pool = pool ?? (0, connection_1.getPool)();
@@ -51,6 +83,12 @@ class MealRepositoryMySQL {
             for (const s of meal.steps) {
                 await conn.execute("INSERT INTO meal_steps (meal_id, step_order, description) VALUES (?, ?, ?)", [meal.id, s.stepOrder, s.description]);
             }
+            await conn.execute("DELETE FROM meal_categories WHERE meal_id = ?", [
+                meal.id,
+            ]);
+            for (const slug of meal.categories) {
+                await conn.execute("INSERT INTO meal_categories (meal_id, category_slug) VALUES (?, ?)", [meal.id, slug]);
+            }
             return meal;
         }
         finally {
@@ -58,7 +96,8 @@ class MealRepositoryMySQL {
         }
     }
     async findById(id) {
-        const [mealRows] = await this.pool.execute("SELECT id, name, date, meal_time, created_by, created_at, total_calories, image FROM meals WHERE id = ?", [id]);
+        const [mealRows] = await this.pool.execute(`SELECT ${MEAL_BASE_SELECT}
+       FROM meals m WHERE m.id = ?`, [id]);
         const mealRow = (Array.isArray(mealRows) ? mealRows[0] : mealRows?.[0]);
         if (!mealRow)
             return null;
@@ -73,36 +112,36 @@ class MealRepositoryMySQL {
         return rowToMeal(mealRow, ingredients, steps);
     }
     async findAll() {
-        const [mealRows] = await this.pool.execute(`SELECT id, name, date, meal_time, created_by, created_at, total_calories, image
-       FROM meals ORDER BY date DESC, meal_time`);
+        const [mealRows] = await this.pool.execute(`SELECT ${MEAL_BASE_SELECT}
+       FROM meals m ORDER BY m.date DESC, m.meal_time`);
         const list = (Array.isArray(mealRows) ? mealRows : []);
         return this.hydrateMeals(list);
     }
     async findByDate(date) {
         const dateStr = date.toISOString().slice(0, 10);
-        const [mealRows] = await this.pool.execute(`SELECT id, name, date, meal_time, created_by, created_at, total_calories, image
-       FROM meals WHERE date = ? ORDER BY meal_time`, [dateStr]);
+        const [mealRows] = await this.pool.execute(`SELECT ${MEAL_BASE_SELECT}
+       FROM meals m WHERE m.date = ? ORDER BY m.meal_time`, [dateStr]);
         const list = (Array.isArray(mealRows) ? mealRows : []);
         return this.hydrateMeals(list);
     }
     async findByDateRange(startDate, endDate) {
         const startStr = startDate.toISOString().slice(0, 10);
         const endStr = endDate.toISOString().slice(0, 10);
-        const [mealRows] = await this.pool.execute(`SELECT id, name, date, meal_time, created_by, created_at, total_calories, image
-       FROM meals WHERE date >= ? AND date <= ? ORDER BY date DESC, meal_time`, [startStr, endStr]);
+        const [mealRows] = await this.pool.execute(`SELECT ${MEAL_BASE_SELECT}
+       FROM meals m WHERE m.date >= ? AND m.date <= ? ORDER BY m.date DESC, m.meal_time`, [startStr, endStr]);
         const list = (Array.isArray(mealRows) ? mealRows : []);
         return this.hydrateMeals(list);
     }
     async findByUserAndDate(userId, date) {
         const dateStr = date.toISOString().slice(0, 10);
-        const [mealRows] = await this.pool.execute(`SELECT id, name, date, meal_time, created_by, created_at, total_calories, image
-       FROM meals WHERE created_by = ? AND date = ? ORDER BY meal_time`, [userId, dateStr]);
+        const [mealRows] = await this.pool.execute(`SELECT ${MEAL_BASE_SELECT}
+       FROM meals m WHERE m.created_by = ? AND m.date = ? ORDER BY m.meal_time`, [userId, dateStr]);
         const list = (Array.isArray(mealRows) ? mealRows : []);
         return this.hydrateMeals(list);
     }
     async findByUser(userId) {
-        const [mealRows] = await this.pool.execute(`SELECT id, name, date, meal_time, created_by, created_at, total_calories, image
-       FROM meals WHERE created_by = ? ORDER BY date DESC, meal_time`, [userId]);
+        const [mealRows] = await this.pool.execute(`SELECT ${MEAL_BASE_SELECT}
+       FROM meals m WHERE m.created_by = ? ORDER BY m.date DESC, m.meal_time`, [userId]);
         const list = (Array.isArray(mealRows) ? mealRows : []);
         return this.hydrateMeals(list);
     }
@@ -143,8 +182,8 @@ class MealRepositoryMySQL {
         }));
     }
     async getRandomMeal(userId) {
-        const [mealRows] = await this.pool.execute(`SELECT id, name, date, meal_time, created_by, created_at, total_calories, image
-       FROM meals WHERE created_by = ? ORDER BY RAND() LIMIT 1`, [userId]);
+        const [mealRows] = await this.pool.execute(`SELECT ${MEAL_BASE_SELECT}
+       FROM meals m WHERE m.created_by = ? ORDER BY RAND() LIMIT 1`, [userId]);
         const list = (Array.isArray(mealRows) ? mealRows : []);
         if (list.length === 0)
             return null;

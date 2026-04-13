@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.CreateMealUseCase = void 0;
 const Meal_1 = require("src/Planner/Domain/Entities/Meal");
 const AppErrors_1 = require("src/shared/Errors/AppErrors");
+const notificationCategorySlug_1 = require("src/shared/Notifications/notificationCategorySlug");
 const normalizeMealSteps_1 = require("./normalizeMealSteps");
 class CreateMealUseCase {
     constructor(mealRepository, ingredientRepository) {
@@ -12,6 +13,7 @@ class CreateMealUseCase {
     async execute(request) {
         const { name, date, mealTime, ingredients, userId, image } = request;
         const steps = (0, normalizeMealSteps_1.normalizeMealSteps)(request.steps);
+        const categorySlugs = this.normalizeMealCategories(request.categories);
         if (!name || name.trim().length < 2) {
             throw new AppErrors_1.AppError("El nombre de la comida debe tener al menos 2 caracteres", 400);
         }
@@ -50,6 +52,7 @@ class CreateMealUseCase {
                 amount: item.amount,
             })),
             steps,
+            categories: categorySlugs,
             CreatedBy: userId,
             createdAt: new Date(),
             totalCalories,
@@ -67,10 +70,17 @@ class CreateMealUseCase {
                 stepOrder: s.stepOrder,
                 description: s.description,
             })),
+            categories: meal.categories,
             totalCalories,
             createdAt: meal.createdAt,
             image: meal.image,
         };
+    }
+    normalizeMealCategories(raw) {
+        if (raw == null || raw.length === 0) {
+            return [];
+        }
+        return (0, notificationCategorySlug_1.mapPreferenceStringsToSlugs)(raw);
     }
 }
 exports.CreateMealUseCase = CreateMealUseCase;

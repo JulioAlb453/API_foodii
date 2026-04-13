@@ -16,6 +16,30 @@ function parseStepsFromBody(body) {
     }
     return raw;
 }
+/** Devuelve `undefined` si el cliente no envía la clave; si envía null o array, devuelve eso. */
+function parseCategoriesFromBody(body) {
+    if (!Object.prototype.hasOwnProperty.call(body, "categories")) {
+        return undefined;
+    }
+    const raw = body.categories;
+    if (raw === null)
+        return null;
+    if (raw === undefined || raw === "")
+        return [];
+    if (typeof raw === "string") {
+        try {
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [];
+        }
+        catch {
+            return [];
+        }
+    }
+    if (Array.isArray(raw)) {
+        return raw;
+    }
+    return [];
+}
 class MealController {
     constructor(createMealUseCase, getMealsUseCase, getMealByIdUseCase, updateMealUseCase, deleteMealUseCase, calculateCaloriesUseCase, getMealsByDateRangeUseCase, getRandomMealUseCase) {
         this.createMealUseCase = createMealUseCase;
@@ -43,6 +67,7 @@ class MealController {
             }
             const image = req.file ? `/uploads/${req.file.filename}` : undefined;
             const steps = parseStepsFromBody(req.body);
+            const categories = parseCategoriesFromBody(req.body);
             const result = await this.createMealUseCase.execute({
                 name,
                 date,
@@ -51,6 +76,7 @@ class MealController {
                 userId,
                 image,
                 steps,
+                ...(categories !== undefined ? { categories } : {}),
             });
             res.status(201).json({
                 success: true,
@@ -119,6 +145,7 @@ class MealController {
             const image = req.file ? `/uploads/${req.file.filename}` : undefined;
             const body = req.body;
             const steps = "steps" in body ? parseStepsFromBody(body) : undefined;
+            const categories = parseCategoriesFromBody(body);
             const result = await this.updateMealUseCase.execute({
                 id: mealId,
                 name,
@@ -128,6 +155,7 @@ class MealController {
                 userId,
                 image,
                 ...(steps !== undefined ? { steps } : {}),
+                ...(categories !== undefined ? { categories } : {}),
             });
             res.status(200).json({
                 success: true,
