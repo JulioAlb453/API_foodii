@@ -5,10 +5,15 @@ import { getPool } from "src/Core/Infraestructure/Database/connection";
 import { IMealIngredient } from "src/Planner/Domain/interfaces/IMealIngredient";
 import { IMealStep } from "src/Planner/Domain/interfaces/IMealStep";
 
-/** Subconsulta: slugs ordenados, separados por coma (se parsea a string[] en Node). */
+/** Subconsulta: slugs ordenados, separados por coma (se parsea a string[] en Node). Sin JOIN principal → no afecta `image`. */
 const CATEGORY_SLUGS_SUBQUERY = `(SELECT GROUP_CONCAT(mc.category_slug ORDER BY mc.category_slug SEPARATOR ',')
    FROM meal_categories mc WHERE mc.meal_id = m.id) AS category_slugs`;
 
+/**
+ * Columnas devueltas por los SELECT de comidas.
+ * `meal_image`: alias explícito de `m.image` para evitar sombras/conflictos de nombre en el driver
+ * cuando el SELECT incluye subconsultas agregadas (regresión típica: image llegaba null/undefined).
+ */
 interface MealRow {
   id: string;
   name: string;
@@ -17,7 +22,7 @@ interface MealRow {
   created_by: string;
   created_at: Date;
   total_calories: number;
-  image: string | null;
+  meal_image: string | null;
   category_slugs: string | null;
 }
 
@@ -41,6 +46,22 @@ function parseCategorySlugsFromRow(raw: unknown): string[] {
     .filter((x) => x.length > 0);
 }
 
+/** URL o ruta de imagen; null si vacío. Soporta Buffer (mysql2 según tipo/collation). */
+function parseImageFromRow(row: MealRow & Record<string, unknown>): string | null {
+  const raw =
+    row.meal_image ??
+    row.image ??
+    row["m.image"] ??
+    (typeof row.IMAGE === "string" ? row.IMAGE : undefined);
+  if (raw == null || raw === "") return null;
+  if (Buffer.isBuffer(raw)) {
+    const s = raw.toString("utf8").trim();
+    return s.length ? s : null;
+  }
+  const s = String(raw).trim();
+  return s.length ? s : null;
+}
+
 function rowToMeal(
   row: MealRow,
   ingredients: IMealIngredient[],
@@ -57,9 +78,14 @@ function rowToMeal(
     CreatedBy: row.created_by,
     createdAt: row.created_at instanceof Date ? row.created_at : new Date(row.created_at),
     totalCalories: Number(row.total_calories),
-    image: row.image ?? null,
+    image: parseImageFromRow(row as MealRow & Record<string, unknown>),
   });
 }
+
+/** Lista de columnas base de `meals` + categorías (siempre mismo orden para todos los SELECT). */
+const MEAL_BASE_SELECT = `m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories,
+       m.image AS meal_image,
+       ${CATEGORY_SLUGS_SUBQUERY}`;
 
 export class MealRepositoryMySQL implements MealRepository {
   private pool: Pool;
@@ -129,8 +155,7 @@ export class MealRepositoryMySQL implements MealRepository {
 
   async findById(id: string): Promise<Meal | null> {
     const [mealRows] = await this.pool.execute(
-      `SELECT m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories, m.image,
-              ${CATEGORY_SLUGS_SUBQUERY}
+      `SELECT ${MEAL_BASE_SELECT}
        FROM meals m WHERE m.id = ?`,
       [id]
     );
@@ -160,8 +185,7 @@ export class MealRepositoryMySQL implements MealRepository {
 
   async findAll(): Promise<Meal[]> {
     const [mealRows] = await this.pool.execute(
-      `SELECT m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories, m.image,
-              ${CATEGORY_SLUGS_SUBQUERY}
+      `SELECT ${MEAL_BASE_SELECT}
        FROM meals m ORDER BY m.date DESC, m.meal_time`
     );
     const list = (Array.isArray(mealRows) ? mealRows : []) as MealRow[];
@@ -171,8 +195,7 @@ export class MealRepositoryMySQL implements MealRepository {
   async findByDate(date: Date): Promise<Meal[]> {
     const dateStr = date.toISOString().slice(0, 10);
     const [mealRows] = await this.pool.execute(
-      `SELECT m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories, m.image,
-              ${CATEGORY_SLUGS_SUBQUERY}
+      `SELECT ${MEAL_BASE_SELECT}
        FROM meals m WHERE m.date = ? ORDER BY m.meal_time`,
       [dateStr]
     );
@@ -184,8 +207,7 @@ export class MealRepositoryMySQL implements MealRepository {
     const startStr = startDate.toISOString().slice(0, 10);
     const endStr = endDate.toISOString().slice(0, 10);
     const [mealRows] = await this.pool.execute(
-      `SELECT m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories, m.image,
-              ${CATEGORY_SLUGS_SUBQUERY}
+      `SELECT ${MEAL_BASE_SELECT}
        FROM meals m WHERE m.date >= ? AND m.date <= ? ORDER BY m.date DESC, m.meal_time`,
       [startStr, endStr]
     );
@@ -196,8 +218,7 @@ export class MealRepositoryMySQL implements MealRepository {
   async findByUserAndDate(userId: string, date: Date): Promise<Meal[]> {
     const dateStr = date.toISOString().slice(0, 10);
     const [mealRows] = await this.pool.execute(
-      `SELECT m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories, m.image,
-              ${CATEGORY_SLUGS_SUBQUERY}
+      `SELECT ${MEAL_BASE_SELECT}
        FROM meals m WHERE m.created_by = ? AND m.date = ? ORDER BY m.meal_time`,
       [userId, dateStr]
     );
@@ -207,8 +228,7 @@ export class MealRepositoryMySQL implements MealRepository {
 
   async findByUser(userId: string): Promise<Meal[]> {
     const [mealRows] = await this.pool.execute(
-      `SELECT m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories, m.image,
-              ${CATEGORY_SLUGS_SUBQUERY}
+      `SELECT ${MEAL_BASE_SELECT}
        FROM meals m WHERE m.created_by = ? ORDER BY m.date DESC, m.meal_time`,
       [userId]
     );
@@ -267,8 +287,7 @@ export class MealRepositoryMySQL implements MealRepository {
 
   async getRandomMeal(userId: string): Promise<Meal | null> {
     const [mealRows] = await this.pool.execute(
-      `SELECT m.id, m.name, m.date, m.meal_time, m.created_by, m.created_at, m.total_calories, m.image,
-              ${CATEGORY_SLUGS_SUBQUERY}
+      `SELECT ${MEAL_BASE_SELECT}
        FROM meals m WHERE m.created_by = ? ORDER BY RAND() LIMIT 1`,
       [userId]
     );
