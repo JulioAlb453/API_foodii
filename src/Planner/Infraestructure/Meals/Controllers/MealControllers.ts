@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 
+import { FcmPushPort } from "src/Core/Application/Ports/FcmPushPort.interface";
 import { CreateMealUseCase } from "src/Planner/application/UseCase/Meal/CreateMealUseCase";
 import { GetMealByIdUseCase } from "src/Planner/application/UseCase/Meal/GetMealById";
 import { UpdateMealUseCase } from "src/Planner/application/UseCase/Meal/UpdateMealUseCase";
@@ -58,7 +59,47 @@ export class MealController {
     private calculateCaloriesUseCase: CalculateCaloriesUseCase,
     private getMealsByDateRangeUseCase: GetMealsByDateRangeUseCase,
     private getRandomMealUseCase: GetRandomMealUseCase,
+    private readonly fcmPushPort?: FcmPushPort
   ) {}
+
+
+  private async notifyNewMealToCategoryTopics(params: {
+    mealId: string;
+    mealName: string;
+    categorySlugs: string[] | undefined | null;
+  }): Promise<void> {
+    const fcm = this.fcmPushPort;
+    if (!fcm?.isConfigured()) return;
+
+    const { mealId, mealName, categorySlugs } = params;
+    if (!categorySlugs?.length) return;
+
+    const title = "¡Nueva receta para ti!";
+    const body = `Se ha publicado: ${mealName}`;
+    const data = {
+      mealId: String(mealId),
+      type: "NEW_MEAL",
+    };
+
+    const seen = new Set<string>();
+    const slugs = categorySlugs
+      .map((s) => String(s).trim())
+      .filter((s) => s.length > 0 && !seen.has(s) && (seen.add(s), true));
+
+    const outcomes = await Promise.allSettled(
+      slugs.map((topicSlug) =>
+        fcm.sendToTopic({ topicSlug, title, body, data })
+      )
+    );
+    outcomes.forEach((outcome, i) => {
+      if (outcome.status === "rejected") {
+        console.error(
+          `[MealController] FCM sendToTopic falló (topic=${slugs[i]}):`,
+          outcome.reason
+        );
+      }
+    });
+  }
 
   async create(req: Request, res: Response): Promise<void> {
     try {
@@ -90,6 +131,12 @@ export class MealController {
         image,
         steps,
         ...(categories !== undefined ? { categories } : {}),
+      });
+
+      await this.notifyNewMealToCategoryTopics({
+        mealId: result.id,
+        mealName: result.name,
+        categorySlugs: result.categories,
       });
 
       res.status(201).json({

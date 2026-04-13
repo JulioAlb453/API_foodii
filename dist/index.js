@@ -9,10 +9,6 @@ const dotenv_1 = __importDefault(require("dotenv"));
 require("module-alias/register");
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
-/**
- * Carga `.env` desde el cwd de PM2 o, si no existe, desde la raíz del proyecto (útil con `dist/`).
- * `override: true`: si PM2 exporta `ADMIN_PUSH_SECRET=` vacío, sin esto dotenv NO sobrescribe y el push admin queda en 401.
- */
 function loadEnvFile() {
     const fromCwd = path_1.default.resolve(process.cwd(), ".env");
     const fromAppDir = path_1.default.resolve(__dirname, "..", ".env");
@@ -55,12 +51,13 @@ const { authController, tokenService } = (0, auth_dependencies_1.createAuthDepen
 const { ingredientController } = (0, ingredient_dependencies_1.createIngredientDependencies)({
     ingredientRepository,
 });
+const authMiddleware = (0, auth_middleware_1.createAuthMiddleware)(tokenService);
+const { fcmPushPort, notificationsController } = (0, notificationPush_dependencies_1.createNotificationPushDependencies)();
 const { mealController } = (0, meal_dependencies_1.createMealDependencies)({
     mealRepository,
     ingredientRepository,
+    fcmPushPort,
 });
-const authMiddleware = (0, auth_middleware_1.createAuthMiddleware)(tokenService);
-const { notificationsController } = (0, notificationPush_dependencies_1.createNotificationPushDependencies)();
 (0, routes_1.registerRoutes)(app, {
     authController,
     mealController,

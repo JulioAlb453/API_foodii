@@ -15,6 +15,7 @@ const MealControllers_1 = require("./Controllers/MealControllers");
 function createMealDependencies(options) {
     const mealRepository = options?.mealRepository ?? new MealRepository_1.MealRepositories();
     const ingredientRepository = options?.ingredientRepository ?? new IngredientRepository_1.IngredientRepositories();
+    const fcmPushPort = options?.fcmPushPort;
     const createMealUseCase = new CreateMealUseCase_1.CreateMealUseCase(mealRepository, ingredientRepository);
     const getMealsUseCase = new GetMealUseCase_1.GetMealsUseCase(mealRepository, ingredientRepository);
     const getMealByIdUseCase = new GetMealById_1.GetMealByIdUseCase(mealRepository, ingredientRepository);
@@ -23,7 +24,7 @@ function createMealDependencies(options) {
     const calculateCaloriesUseCase = new CalCulateCaloriesUseCase_1.CalculateCaloriesUseCase(mealRepository);
     const getMealsByDateRangeUseCase = new GetMealsByDateRangeUseCase_1.GetMealsByDateRangeUseCase(mealRepository, ingredientRepository);
     const getRandomMealUseCase = new GetRandomMealUseCase_1.GetRandomMealUseCase(mealRepository, ingredientRepository);
-    const mealController = new MealControllers_1.MealController(createMealUseCase, getMealsUseCase, getMealByIdUseCase, updateMealUseCase, deleteMealUseCase, calculateCaloriesUseCase, getMealsByDateRangeUseCase, getRandomMealUseCase);
+    const mealController = new MealControllers_1.MealController(createMealUseCase, getMealsUseCase, getMealByIdUseCase, updateMealUseCase, deleteMealUseCase, calculateCaloriesUseCase, getMealsByDateRangeUseCase, getRandomMealUseCase, fcmPushPort);
     return {
         mealController,
         mealRepository,

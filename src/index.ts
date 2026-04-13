@@ -56,14 +56,15 @@ const { authController, tokenService } = createAuthDependencies({
 const { ingredientController } = createIngredientDependencies({
   ingredientRepository,
 });
+
+const authMiddleware = createAuthMiddleware(tokenService);
+const { fcmPushPort, notificationsController } =
+  createNotificationPushDependencies();
 const { mealController } = createMealDependencies({
   mealRepository,
   ingredientRepository,
+  fcmPushPort,
 });
-
-
-const authMiddleware = createAuthMiddleware(tokenService);
-const { notificationsController } = createNotificationPushDependencies();
 
 registerRoutes(app, {
   authController,

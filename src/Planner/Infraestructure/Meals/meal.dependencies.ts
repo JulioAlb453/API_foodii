@@ -1,3 +1,4 @@
+import { FcmPushPort } from "src/Core/Application/Ports/FcmPushPort.interface";
 import { MealRepository, MealRepositories } from "src/Planner/Domain/interfaces/MealRepository";
 import { IngredientRepository, IngredientRepositories } from "src/Planner/Domain/interfaces/IngredientRepository";
 import { CreateMealUseCase } from "src/Planner/application/UseCase/Meal/CreateMealUseCase";
@@ -13,12 +14,15 @@ import { MealController } from "./Controllers/MealControllers";
 export interface MealDependenciesOptions {
   mealRepository?: MealRepository;
   ingredientRepository?: IngredientRepository;
+  /** Mismo puerto que el endpoint admin; usado para push al crear comidas con categorías. */
+  fcmPushPort?: FcmPushPort;
 }
 
 export function createMealDependencies(options?: MealDependenciesOptions) {
   const mealRepository = options?.mealRepository ?? new MealRepositories();
   const ingredientRepository =
     options?.ingredientRepository ?? new IngredientRepositories();
+  const fcmPushPort = options?.fcmPushPort;
 
   const createMealUseCase = new CreateMealUseCase(
     mealRepository,
@@ -55,7 +59,8 @@ export function createMealDependencies(options?: MealDependenciesOptions) {
     deleteMealUseCase,
     calculateCaloriesUseCase,
     getMealsByDateRangeUseCase,
-    getRandomMealUseCase
+    getRandomMealUseCase,
+    fcmPushPort
   );
 
   return {

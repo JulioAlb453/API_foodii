@@ -41,7 +41,7 @@ function parseCategoriesFromBody(body) {
     return [];
 }
 class MealController {
-    constructor(createMealUseCase, getMealsUseCase, getMealByIdUseCase, updateMealUseCase, deleteMealUseCase, calculateCaloriesUseCase, getMealsByDateRangeUseCase, getRandomMealUseCase) {
+    constructor(createMealUseCase, getMealsUseCase, getMealByIdUseCase, updateMealUseCase, deleteMealUseCase, calculateCaloriesUseCase, getMealsByDateRangeUseCase, getRandomMealUseCase, fcmPushPort) {
         this.createMealUseCase = createMealUseCase;
         this.getMealsUseCase = getMealsUseCase;
         this.getMealByIdUseCase = getMealByIdUseCase;
@@ -50,6 +50,35 @@ class MealController {
         this.calculateCaloriesUseCase = calculateCaloriesUseCase;
         this.getMealsByDateRangeUseCase = getMealsByDateRangeUseCase;
         this.getRandomMealUseCase = getRandomMealUseCase;
+        this.fcmPushPort = fcmPushPort;
+    }
+    /**
+     * Tras persistir la comida: un push por slug de categoría (tópico FCM = slug).
+     * Errores FCM no revierten el 201; solo se registran en consola / auditoría FCM.
+     */
+    async notifyNewMealToCategoryTopics(params) {
+        const fcm = this.fcmPushPort;
+        if (!fcm?.isConfigured())
+            return;
+        const { mealId, mealName, categorySlugs } = params;
+        if (!categorySlugs?.length)
+            return;
+        const title = "¡Nueva receta para ti!";
+        const body = `Se ha publicado: ${mealName}`;
+        const data = {
+            mealId: String(mealId),
+            type: "NEW_MEAL",
+        };
+        const seen = new Set();
+        const slugs = categorySlugs
+            .map((s) => String(s).trim())
+            .filter((s) => s.length > 0 && !seen.has(s) && (seen.add(s), true));
+        const outcomes = await Promise.allSettled(slugs.map((topicSlug) => fcm.sendToTopic({ topicSlug, title, body, data })));
+        outcomes.forEach((outcome, i) => {
+            if (outcome.status === "rejected") {
+                console.error(`[MealController] FCM sendToTopic falló (topic=${slugs[i]}):`, outcome.reason);
+            }
+        });
     }
     async create(req, res) {
         try {
@@ -77,6 +106,11 @@ class MealController {
                 image,
                 steps,
                 ...(categories !== undefined ? { categories } : {}),
+            });
+            await this.notifyNewMealToCategoryTopics({
+                mealId: result.id,
+                mealName: result.name,
+                categorySlugs: result.categories,
             });
             res.status(201).json({
                 success: true,
