@@ -2,10 +2,7 @@ import { Request, Response } from "express";
 import { FcmPushPort } from "src/Core/Application/Ports/FcmPushPort.interface";
 import { AppError } from "src/shared/Errors/AppErrors";
 
-/**
- * Endpoints operativos para disparar notificaciones (p. ej. cuando el admin publica una receta).
- * Protegidos con `X-Admin-Secret` = variable de entorno `ADMIN_PUSH_SECRET`.
- */
+
 export class NotificationsController {
   constructor(private readonly fcm: FcmPushPort) {}
 
@@ -22,12 +19,13 @@ export class NotificationsController {
       }
 
       const header = req.headers["x-admin-secret"];
-      const provided =
+      const raw =
         typeof header === "string"
           ? header
           : Array.isArray(header)
-            ? header[0]
+            ? (header[0] ?? "")
             : "";
+      const provided = String(raw).trim();
 
       if (provided !== expected) {
         res.status(401).json({ success: false, error: "No autorizado" });
